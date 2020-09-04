@@ -70,12 +70,11 @@ func CombineResults(in, out chan interface{}) {
 		arr = append(arr, data.(string))
 	}
 	sort.Strings(arr)
-	fmt.Printf("CombineResults %v\n", arr)
-	sort.Strings(arr)
 	var res string
 	for _, r := range arr {
 		res += "_" + r
 	}
+	fmt.Printf("CombineResults %v\n", res[1:])
 	out <- res[1:]
 }
 
