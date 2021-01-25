@@ -35,7 +35,6 @@ function UpdateFancyBox(){
         },
         loop : true,
         animationEffect: "fade",
-        transitionEffect: "slide",
     });
 }
 

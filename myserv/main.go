@@ -1,14 +1,13 @@
 package main
 
 import (
+	"github.com/aleksandr-kai/golang/myserv/AlbumsTools"
 	"fmt"
 	"github.com/thedevsaddam/renderer"
-	"myserv/FilesCollection"
 	"net/http"
 	"os"
 )
 
-var ImagesCollection FilesCollection.Collection
 var rnd *renderer.Render
 
 type ImageInfo struct {
@@ -40,8 +39,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	case "album-list":{
-		ImagesCollection.Set(FilesCollection.GetFilesList(""))
-		Albums := FilesCollection.GetAlbums()
+		Albums := AlbumsTools.GetAlbums()
 		params := make([]TmplAlbum, len(Albums))
 
 		for i, album := range Albums {
@@ -81,7 +79,7 @@ func galleryHandler(w http.ResponseWriter, r *http.Request)  {
 		fmt.Printf("[galleryHandler] Параметр <album> не найден: %v\n", r.URL)
 		return
 	}
-	Albums := FilesCollection.GetAlbums()
+	Albums := AlbumsTools.GetAlbums()
 	for _, album := range Albums {
 		if album.Path == param {
 			params := TmplParams{album.Title, make([]ImageInfo, len(album.Images))}
@@ -108,16 +106,16 @@ func imgHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("name")
 	size := r.URL.Query().Get("size")
 
-	path := FilesCollection.RootDir + album + "/" + size + "/" + name
+	path := AlbumsTools.RootDir + album + "/" + size + "/" + name
 	//fmt.Printf("ServeFile: %v\n", path)
 	_, err := os.Stat(path)
 	if err != nil {
 		//fmt.Printf("File exists: %v\n", err.Error())
 		w.Header().Set("Content-Type", "image/jpeg")
 		if size == "s" {
-			http.ServeFile(w, r, FilesCollection.RootDir + "no_images.png")
+			http.ServeFile(w, r, AlbumsTools.RootDir + "no_images.png")
 		}else{
-			http.ServeFile(w, r, FilesCollection.RootDir + album + "/s/" + name)
+			http.ServeFile(w, r, AlbumsTools.RootDir + album + "/s/" + name)
 		}
 
 	}else{
@@ -135,7 +133,6 @@ func init() {
 }
 
 func main() {
-	ImagesCollection.Set(FilesCollection.GetFilesList(""))
 	fs := http.FileServer(http.Dir("html"))
 	mux := http.NewServeMux()
 	mux.HandleFunc("/home", homeHandler)
@@ -143,13 +140,13 @@ func main() {
 	mux.HandleFunc("/img", imgHandler)
 	mux.Handle("/img/", fs)
 	mux.Handle("/css/", fs)
-	mux.Handle("/fonts/", fs)
+	//mux.Handle("/fonts/", fs)
 	mux.Handle("/js/", fs)
-	mux.Handle("/less/", fs)
-	mux.Handle("/metadata/", fs)
-	mux.Handle("/scss/", fs)
-	mux.Handle("/sprites/", fs)
-	mux.Handle("/svgs/", fs)
+	//mux.Handle("/less/", fs)
+	//mux.Handle("/metadata/", fs)
+	//mux.Handle("/scss/", fs)
+	//mux.Handle("/sprites/", fs)
+	//mux.Handle("/svgs/", fs)
 	mux.Handle("/files/", fs)
 	port := "888"
 	fmt.Println("starting server at 127.0.0.1:" + port)

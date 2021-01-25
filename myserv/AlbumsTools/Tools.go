@@ -1,4 +1,4 @@
-package FilesCollection
+package AlbumsTools
 
 import (
 	"encoding/json"
@@ -34,7 +34,7 @@ type Album struct{
 func (p *Album) CreateNew() error{
 	aName := time.Now().Unix()
 	p.Path = strconv.FormatInt(aName, 10)
-	os.Mkdir(RootDir + p.Path, os.ModePerm)
+	os.Mkdir(RootDir+ p.Path, os.ModePerm)
 	desc,err := os.Create(RootDir + p.Path + "/description.txt")
 	if err != nil{
 		fmt.Printf("Не удалось создать файл описания альбома: %v\n", err.Error())
@@ -63,23 +63,9 @@ func IsEmptyAlbum(path string) bool {
 	}
 	return true
 }
-/*
-func GetAlbum(path string) (Album, error) {
-	txt, err := ioutil.ReadFile(RootDir + path + "/description.txt") // пытаемся читать описание
-	if err != nil {
-		fmt.Printf("[GetAlbum] Не удалось открыть файл описания: %v\n", err.Error())
-		return Album{}, err
-	}
-	al := &Album{}
-	err = json.Unmarshal(txt, al)
-	if err != nil {
-		fmt.Printf("[GetAlbum] Ошибка распаковки json: %v\n", err.Error())
-		return Album{}, err
-	}
-}
-*/
+
 func GetAlbums() []Album {
-	files, err := ioutil.ReadDir(RootDir)	// читаем папку с альбомами
+	files, err := ioutil.ReadDir(RootDir) // читаем папку с альбомами
 	if err != nil {
 		fmt.Errorf("[GetAlbums]: %v", err.Error())
 		return nil
@@ -114,7 +100,7 @@ func GetAlbums() []Album {
 				}
 			}
 
-			images, err := ioutil.ReadDir(RootDir + file.Name() + "/s/")	// читаем папку с альбомами
+			images, err := ioutil.ReadDir(RootDir + file.Name() + "/s/") // читаем папку с альбомами
 			if err == nil {
 				for _, img := range images {
 					if !img.IsDir() && (strings.ToLower(filepath.Ext(img.Name())) == ".jpg") {
@@ -131,12 +117,6 @@ func GetAlbums() []Album {
 		}
 	}
 	return albums
-}
-
-type Collection struct {
-	Files []string
-	Thumbs []string
-	CurrentPage uint8
 }
 
 func GetFilesList(path string) []string{
@@ -161,55 +141,4 @@ func GetFilesList(path string) []string{
 		}
 	}
 	return res
-}
-
-func (p *Collection) Count() uint32{
-	return uint32(len(p.Files))
-}
-
-func (p *Collection) Set(value []string){
-	p.CurrentPage = 0
-	p.Files = make([]string, len(value))
-	copy(p.Files, value)
-}
-
-func (p *Collection) PageCount(size uint8) uint8{
-	pageCount := uint8(p.Count() / uint32(size))
-	if p.Count() - uint32(pageCount * size) > 0{
-		pageCount++
-	}
-	return pageCount
-}
-
-func (p *Collection) GetPage(page int16, size uint8) []string {
-	switch page {
-	case Next:{
-		p.CurrentPage++
-		if p.CurrentPage >= p.PageCount(size){
-			p.CurrentPage = 0
-		}
-	}
-	case Prev:{
-		if p.CurrentPage == 0{
-			p.CurrentPage = p.PageCount(size) - 1
-		}else{
-			p.CurrentPage--
-		}
-	}
-	case Current:
-
-	default:
-		if page >= 0{
-			p.CurrentPage = uint8(page)
-		}else {
-			return nil
-		}
-	}
-
-	pos := p.CurrentPage * size
-	if p.CurrentPage == p.PageCount(size) - 1{
-		return p.Files[pos:]
-	}else{
-		return p.Files[pos:pos + size]
-	}
 }
