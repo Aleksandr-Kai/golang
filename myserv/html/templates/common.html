@@ -1,0 +1,87 @@
+{{define "meta"}}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{{end}}
+
+{{define "links"}}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/all.css">
+    <link rel="stylesheet" href="css/fontawesome.css">
+    <link rel="stylesheet" href="css/brands.css">
+    <link rel="stylesheet" href="css/solid.css">
+{{end}}
+
+{{define "scripts"}}
+    <!-- JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function(){
+            setTimeout(sayHello, 1000);
+        });
+
+        function sayHello() {
+            alert("Hello from scripts!");
+        }
+    </script>
+{{end}}
+
+{{define "modal"}}
+    <div class="modal fade" id="modal" tabindex="-1" role="dialog" data-bs-backdrop="static" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen" role="document">
+            <div class="modal-content bg-dark">
+            <div class="modal-header">
+                <h5 class="modal-title">Modal title</h5>
+                <button type="button" class="btn-close bg-light" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="carousel-inner slider">
+                <img id="img_carousel" src="#" class="img-fluid z-depth-1" alt="...">
+                <a class="btn-prev bg-secondary" role="button" id="btn_prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </a>
+                <a class="btn-next bg-secondary" role="button" id="btn_next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </a>
+                </div>
+            </div> 
+            <!--Footer-->
+            <!--
+            <div class="modal-footer justify-content-center">       
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+            -->
+            </div>
+        </div>
+    </div>
+{{end}}
+
+{{define "album-list"}}
+    <div class="row row-cols-xxl-4 row-cols-xl-3 row-cols-lg-3 row-cols-md-2">
+    {{range .}}
+      <div class="col">
+        <div class="card shadow">
+          <img src="{{.AlbumImg}}" class="card-img-top card-image bg-dark" alt="Обложка альбома">
+          <div class="card-body">
+            <h4 class="card-title overflow-hidden"><span class="album-counter">{{.AlbumTitleComment}} </span>{{.AlbumTitle}}</h4>
+            <p class="card-text overflow-auto">{{.AlbumDescription}}</p>
+            <a href="#" role="button" data-href="gallery?album={{.AlbumPath}}" class="btn btn-dark card-btn shadow" data-bs-toggle="modal" data-bs-target="#myModal">В окне</a>
+            <a href="javascript:void(0);" role="button" onclick="OpenGallery('gallery?album={{.AlbumPath}}');" class="btn btn-dark card-btn shadow">На странице</a>
+          </div>
+        </div>
+      </div>
+    {{end}}
+  </div>
+{{end}}
+
+{{ define "footer" }}
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://getbootstrap.com/docs/3.3/dist/js/bootstrap.min.js"></script>
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<script src="https://getbootstrap.com/docs/3.3/assets/js/ie10-viewport-bug-workaround.js"></script>
+{{ end }}
+

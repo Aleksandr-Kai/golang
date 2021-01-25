@@ -1,0 +1,57 @@
+{{define "home"}}
+<!DOCTYPE html>
+<html>
+    <head>
+      {{template "header"}}
+      <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />-->
+      <link rel="stylesheet" href="files/fancybox-master/dist/jquery.fancybox.min.css" />
+      <link rel="stylesheet" href="css/gallery.css">
+    </head>
+    
+    <body>
+        {{template "navbar"}}
+        <br>
+        <!------------------------------------------------------------------------------------------>
+        <div class="modal fade" id="myModal" role="dialog">
+          <div class="modal-dialog modal-xl modal-dialog-scrollable">
+          
+              <!-- Modal content-->
+              <div class="modal-content">
+                  <div class="modal-header">
+                    <h4 class="modal-title">
+                      
+                    </h4>
+                    <div class="container rouded logo shadow">
+                      <h1>
+                        <span class="alogo">A</span><span class="kailogo">Kai</span>
+                      </h1>
+                    </div>
+                    
+                    <h1 class="photologo">Photo</h1>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body" id="mb">
+      
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                  </div>
+              </div>
+            
+          </div>
+        </div>
+        <div class="container album-list bg-light rounded shadow">
+          
+        </div>
+        {{template "footer"}}
+        <script type="text/javascript" src="js/myscripts.js"></script>
+        <!--<script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>-->
+        <script src="files/fancybox-master/dist/jquery.fancybox.min.js"></script>
+    </body>
+    <footer>
+      <div class="myfooter">
+        <h5>Footer</h5>
+      </div>
+    </footer>
+</html>
+{{end}}
