@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="9eca3cac-94f0-4a99-ba04-4df2a9389c61" name="Default Changelist" comment="второе задание coursera не проходит по времени">
+      <change afterPath="$PROJECT_DIR$/cover.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cover.out" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="GOROOT" path="C:\Go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectId" id="1gzLmAvGybMXwcK3EMcK55LOJDA" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="GO_FMT" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="go.import.settings.migrated" value="true" />
+    <property name="go.sdk.automatically.set" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="RunManager">
+    <configuration name="go build github.com/Aleksandr-Kai/golang/hw2_signer" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="hw2_signer" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <filePath value="$PROJECT_DIR$/signer.go" />
+      <package value="github.com/Aleksandr-Kai/golang/hw2_signer" />
+      <directory value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Build.go build github.com/Aleksandr-Kai/golang/hw2_signer" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="9eca3cac-94f0-4a99-ba04-4df2a9389c61" name="Default Changelist" comment="" />
+      <created>1599112630551</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1599112630551</updated>
+    </task>
+    <task id="LOCAL-00001" summary="второе задание coursera">
+      <created>1599112745381</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1599112745381</updated>
+    </task>
+    <task id="LOCAL-00002" summary="второе задание coursera прогресс 1">
+      <created>1599140911902</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1599140911902</updated>
+    </task>
+    <task id="LOCAL-00003" summary="второе задание coursera описание">
+      <created>1599141019550</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1599141019550</updated>
+    </task>
+    <task id="LOCAL-00004" summary="второе задание coursera не проходит по времени">
+      <created>1599222405405</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1599222405405</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+    <MESSAGE value="второе задание coursera" />
+    <MESSAGE value="второе задание coursera прогресс 1" />
+    <MESSAGE value="второе задание coursera описание" />
+    <MESSAGE value="второе задание coursera не проходит по времени" />
+    <option name="LAST_COMMIT_MESSAGE" value="второе задание coursera не проходит по времени" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="756" y="459" key="#GOROOT" timestamp="1599112651901">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state x="756" y="459" key="#GOROOT/0.0.1920.1050@0.0.1920.1050" timestamp="1599112651901" />
+    <state x="188" y="91" width="1536" height="840" key="DiffContextDialog" timestamp="1599484521783">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state x="188" y="91" width="1536" height="840" key="DiffContextDialog/0.0.1920.1050@0.0.1920.1050" timestamp="1599484521783" />
+    <state width="1876" height="281" key="GridCell.Tab.0.bottom" timestamp="1599218182040">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state width="1876" height="281" key="GridCell.Tab.0.bottom/0.0.1920.1050@0.0.1920.1050" timestamp="1599218182040" />
+    <state width="1876" height="281" key="GridCell.Tab.0.center" timestamp="1599218182040">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state width="1876" height="281" key="GridCell.Tab.0.center/0.0.1920.1050@0.0.1920.1050" timestamp="1599218182040" />
+    <state width="1876" height="281" key="GridCell.Tab.0.left" timestamp="1599218182040">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state width="1876" height="281" key="GridCell.Tab.0.left/0.0.1920.1050@0.0.1920.1050" timestamp="1599218182040" />
+    <state width="1876" height="281" key="GridCell.Tab.0.right" timestamp="1599218182040">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state width="1876" height="281" key="GridCell.Tab.0.right/0.0.1920.1050@0.0.1920.1050" timestamp="1599218182040" />
+    <state x="556" y="262" key="Vcs.Push.Dialog.v2" timestamp="1599222427967">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state x="556" y="262" key="Vcs.Push.Dialog.v2/0.0.1920.1050@0.0.1920.1050" timestamp="1599222427967" />
+    <state x="781" y="443" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1599484650104">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state x="781" y="443" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1920.1050@0.0.1920.1050" timestamp="1599484650104" />
+  </component>
+</project>

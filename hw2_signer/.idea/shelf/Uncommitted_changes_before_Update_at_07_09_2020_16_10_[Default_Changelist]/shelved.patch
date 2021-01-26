@@ -1,0 +1,18 @@
+Index: signer.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package main\r\n\r\nimport (\r\n\t\"fmt\"\r\n\t\"sort\"\r\n\t\"strconv\"\r\n\t\"sync\"\r\n)\r\n\r\nvar mu sync.Mutex\r\n\r\nfunc SingleHash(in, out chan interface{}) {\r\n\tdsch := make(chan string)\r\n\tmdch := make(chan string)\r\n\r\n\tvar data string\r\n\tfor i := range in {\r\n\t\tdata = fmt.Sprintf(\"%v\", i)\r\n\t\tfmt.Printf(\"SingleHash data %v\\n\", data)\r\n\r\n\t\tgo func(data string) {\r\n\t\t\tdsch <- DataSignerCrc32(data)\r\n\t\t}(data)\r\n\r\n\t\tgo func(data string) {\r\n\t\t\tmu.Lock()\r\n\t\t\tmdch <- DataSignerMd5(data)\r\n\t\t\tmu.Unlock()\r\n\t\t}(data)\r\n\r\n\t\tds := <-dsch\r\n\t\tmd := <-mdch\r\n\t\tfmt.Printf(\"%v SingleHash crc32(data) %v\\n\", data, ds)\r\n\t\tfmt.Printf(\"%v SingleHash md5(data) %v\\n\", data, md)\r\n\t\tdsmd := DataSignerCrc32(md)\r\n\t\tfmt.Printf(\"%v SingleHash crc32(md5(data)) %v\\n\", data, dsmd)\r\n\t\tres := ds + \"~\" + dsmd\r\n\t\tfmt.Printf(\"%v SingleHash result %v\\n\", data, res)\r\n\t\tout <- res\r\n\t}\r\n}\r\n\r\nfunc MultiHash(in, out chan interface{}) {\r\n\tvar arr [6]string\r\n\twg := sync.WaitGroup{}\r\n\tfor data := range in {\r\n\t\tf := func(th int) {\r\n\t\t\tdefer wg.Done()\r\n\t\t\tarr[th] = DataSignerCrc32(strconv.Itoa(th) + data.(string))\r\n\t\t\tfmt.Printf(\"%v MultiHash: crc32(th+step1)) %v %v\\n\", data, th, arr[th])\r\n\t\t}\r\n\r\n\t\tfor i := 0; i < 6; i++ {\r\n\t\t\twg.Add(1)\r\n\t\t\tgo f(i)\r\n\t\t}\r\n\t\twg.Wait()\r\n\t\tres := \"\"\r\n\t\tfor _, s := range arr {\r\n\t\t\tres += s\r\n\t\t}\r\n\t\tfmt.Printf(\"MultiHash result: %v\\n\\n\", res)\r\n\t\tout <- res\r\n\t}\r\n}\r\n\r\nfunc CombineResults(in, out chan interface{}) {\r\n\tvar arr []string\r\n\tfor data := range in {\r\n\t\tarr = append(arr, data.(string))\r\n\t}\r\n\tsort.Strings(arr)\r\n\tfmt.Printf(\"CombineResults %v\\n\", arr)\r\n\tsort.Strings(arr)\r\n\tvar res string\r\n\tfor _, r := range arr {\r\n\t\tres += \"_\" + r\r\n\t}\r\n\tout <- res[1:]\r\n}\r\n\r\nfunc ExecutePipeline(jobs ...job) {\r\n\tvar wgroup sync.WaitGroup\r\n\tin := make(chan interface{})\r\n\r\n\tfor _, jobFunc := range jobs {\r\n\t\twgroup.Add(1)\r\n\t\tout := make(chan interface{})\r\n\t\tgo workerPipeline(&wgroup, jobFunc, in, out)\r\n\t\tin = out\r\n\t}\r\n\twgroup.Wait()\r\n}\r\n\r\nfunc workerPipeline(wg *sync.WaitGroup, jobFunc job, in, out chan interface{}) {\r\n\tdefer wg.Done()\r\n\tdefer close(out)\r\n\tjobFunc(in, out)\r\n}\r\n\r\nfunc main() {\r\n\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- signer.go	(revision 22c3f74fbfcb38b0e8439527f2b98197314a9efa)
++++ signer.go	(date 1599222558737)
+@@ -47,7 +47,7 @@
+ 		f := func(th int) {
+ 			defer wg.Done()
+ 			arr[th] = DataSignerCrc32(strconv.Itoa(th) + data.(string))
+-			fmt.Printf("%v MultiHash: crc32(th+step1)) %v %v\n", data, th, arr[th])
++			fmt.Printf("%v MultiHash: crc32(th+step1) %v %v\n", data, th, arr[th])
+ 		}
+ 
+ 		for i := 0; i < 6; i++ {

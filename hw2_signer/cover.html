@@ -1,0 +1,287 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>hw2_signer: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/Aleksandr-Kai/golang/hw2_signer/common.go (0.0%)</option>
+				
+				<option value="file1">github.com/Aleksandr-Kai/golang/hw2_signer/signer.go (80.3%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "crypto/md5"
+        "fmt"
+        "hash/crc32"
+        "strconv"
+        "sync/atomic"
+        "time"
+)
+
+type job func(in, out chan interface{})
+
+const (
+        MaxInputDataLen = 100
+)
+
+var (
+        dataSignerOverheat uint32 = 0
+        DataSignerSalt            = ""
+)
+
+var OverheatLock = func() <span class="cov0" title="0">{
+        for </span><span class="cov0" title="0">{
+                if swapped := atomic.CompareAndSwapUint32(&amp;dataSignerOverheat, 0, 1); !swapped </span><span class="cov0" title="0">{
+                        fmt.Println("OverheatLock happend")
+                        time.Sleep(time.Second)
+                }</span> else<span class="cov0" title="0"> {
+                        break</span>
+                }
+        }
+}
+
+var OverheatUnlock = func() <span class="cov0" title="0">{
+        for </span><span class="cov0" title="0">{
+                if swapped := atomic.CompareAndSwapUint32(&amp;dataSignerOverheat, 1, 0); !swapped </span><span class="cov0" title="0">{
+                        fmt.Println("OverheatUnlock happend")
+                        time.Sleep(time.Second)
+                }</span> else<span class="cov0" title="0"> {
+                        break</span>
+                }
+        }
+}
+
+var DataSignerMd5 = func(data string) string <span class="cov0" title="0">{
+        OverheatLock()
+        defer OverheatUnlock()
+        data += DataSignerSalt
+        dataHash := fmt.Sprintf("%x", md5.Sum([]byte(data)))
+        time.Sleep(10 * time.Millisecond)
+        return dataHash
+}</span>
+
+var DataSignerCrc32 = func(data string) string <span class="cov0" title="0">{
+        data += DataSignerSalt
+        crcH := crc32.ChecksumIEEE([]byte(data))
+        dataHash := strconv.FormatUint(uint64(crcH), 10)
+        time.Sleep(time.Second)
+        return dataHash
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package main
+
+import (
+        "fmt"
+        "sort"
+        "strconv"
+        "strings"
+        "sync"
+        "time"
+)
+
+func SingleHash(in, out chan interface{}) <span class="cov8" title="1">{
+        wg := sync.WaitGroup{}
+        mu := &amp;sync.Mutex{}
+        for i := range in </span><span class="cov8" title="1">{
+                wg.Add(1)
+                go func(data string) </span><span class="cov8" title="1">{
+                        defer wg.Done()
+                        mdCh := make(chan string)
+                        crcCh := make(chan string)
+                        go func() </span><span class="cov8" title="1">{
+                                mu.Lock()
+                                mdCh &lt;- DataSignerMd5(data)
+                                mu.Unlock()
+                        }</span>()
+
+                        <span class="cov8" title="1">go func() </span><span class="cov8" title="1">{
+                                crcCh &lt;- DataSignerCrc32(data)
+                        }</span>()
+                        <span class="cov8" title="1">md5 := &lt;-mdCh
+                        dsMd := DataSignerCrc32(md5)
+                        ds := &lt;-crcCh
+                        res := ds + "~" + dsMd
+                        out &lt;- res</span>
+                }(strconv.Itoa(i.(int)))
+        }
+        <span class="cov8" title="1">wg.Wait()</span>
+}
+
+func MultiHash(in, out chan interface{}) <span class="cov8" title="1">{
+        wg := sync.WaitGroup{}
+        for data := range in </span><span class="cov8" title="1">{
+                wg.Add(1)
+                go func(data string) </span><span class="cov8" title="1">{
+                        defer wg.Done()
+                        arr := make([]string, 6)
+                        wgw := sync.WaitGroup{}
+
+                        for i := 0; i &lt; 6; i++ </span><span class="cov8" title="1">{
+                                wgw.Add(1)
+                                go func(th int) </span><span class="cov8" title="1">{
+                                        defer wgw.Done()
+                                        arr[th] = DataSignerCrc32(strconv.Itoa(th) + data)
+                                }</span>(i)
+                        }
+                        <span class="cov8" title="1">wgw.Wait()
+                        res := strings.Join(arr, "")
+                        out &lt;- res</span>
+                }(data.(string))
+        }
+        <span class="cov8" title="1">wg.Wait()</span>
+}
+
+func CombineResults(in, out chan interface{}) <span class="cov8" title="1">{
+        var arr []string
+        for data := range in </span><span class="cov8" title="1">{
+                arr = append(arr, data.(string))
+        }</span>
+        <span class="cov8" title="1">sort.Strings(arr)
+        res := strings.Join(arr, "_")
+        out &lt;- res</span>
+}
+
+func ExecutePipeline(jobs ...job) <span class="cov8" title="1">{
+        var wg sync.WaitGroup
+        in := make(chan interface{})
+
+        for _, jobFunc := range jobs </span><span class="cov8" title="1">{
+                wg.Add(1)
+                out := make(chan interface{})
+                go func(jobFunc job, in, out chan interface{}) </span><span class="cov8" title="1">{
+                        defer wg.Done()
+                        defer close(out)
+                        jobFunc(in, out)
+                }</span>(jobFunc, in, out)
+                <span class="cov8" title="1">in = out</span>
+        }
+        <span class="cov8" title="1">wg.Wait()</span>
+}
+
+func main() <span class="cov0" title="0">{
+        //inputData := []int{0, 1, 2, 2, 3, 5, 8}
+        inputData := []int{0, 1, 2, 3, 4, 5, 6}
+
+        hashSignJobs := []job{
+                job(func(in, out chan interface{}) </span><span class="cov0" title="0">{
+                        for _, fibNum := range inputData </span><span class="cov0" title="0">{
+                                out &lt;- fibNum
+                        }</span>
+                }),
+                job(SingleHash),
+                job(MultiHash),
+                job(CombineResults),
+                job(func(in, out chan interface{}) <span class="cov0" title="0">{
+                        dataRaw := &lt;-in
+                        data, ok := dataRaw.(string)
+                        if !ok </span><span class="cov0" title="0">{
+                                fmt.Println("cant convert result data to string")
+                        }</span>
+                        <span class="cov0" title="0">fmt.Println(data)</span>
+                }),
+        }
+
+        <span class="cov0" title="0">start := time.Now()
+
+        ExecutePipeline(hashSignJobs...)
+
+        end := time.Since(start)
+        fmt.Printf("Time: %v\n", end)</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
