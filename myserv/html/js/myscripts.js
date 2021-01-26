@@ -26,6 +26,15 @@ function onPageLoaded() {
 
 function UpdateFancyBox(){
     $('[data-fancybox="gallery"]').fancybox({
+        buttons: [
+            "zoom",
+            "share",
+            "slideShow",
+            "fullScreen",
+            "download",
+            "thumbs",
+            "close"
+          ],
         afterShow : function(instance, current) {
           var src =  current.src.replace('size=m', 'size=l');
       

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/aleksandr-kai/golang/myserv/AlbumsTools"
 	"fmt"
+	"github.com/aleksandr-kai/golang/myserv/AlbumsTools"
 	"github.com/thedevsaddam/renderer"
 	"net/http"
 	"os"
@@ -32,8 +32,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	param := r.URL.Query().Get("get_content")
 
 	switch param {
-	case "":{
-		err := rnd.HTML(w, http.StatusOK, "home", nil)
+	case "":{err := rnd.HTML(w, http.StatusOK, "home", nil)
 		if err != nil{
 			fmt.Printf("%v\n", err)
 		}
@@ -125,7 +124,6 @@ func imgHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 func init() {
 	rnd = renderer.New(renderer.Options{
 		ParseGlobPattern: "./html/templates/*.html",
@@ -140,15 +138,8 @@ func main() {
 	mux.HandleFunc("/img", imgHandler)
 	mux.Handle("/img/", fs)
 	mux.Handle("/css/", fs)
-	//mux.Handle("/fonts/", fs)
 	mux.Handle("/js/", fs)
-	//mux.Handle("/less/", fs)
-	//mux.Handle("/metadata/", fs)
-	//mux.Handle("/scss/", fs)
-	//mux.Handle("/sprites/", fs)
-	//mux.Handle("/svgs/", fs)
-	mux.Handle("/files/", fs)
-	port := "888"
+	port := "80"
 	fmt.Println("starting server at 127.0.0.1:" + port)
 	http.ListenAndServe(":" + port, mux)
 }
