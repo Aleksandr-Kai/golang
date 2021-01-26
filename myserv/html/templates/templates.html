@@ -27,99 +27,21 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent" style="padding-left: 15px;">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <a class="nav-link" href="#">Link</a>
-            </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Dropdown
+                Гость
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="#">Action</a></li>
-                <li><a class="dropdown-item" href="#">Another action</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#">Something else here</a></li>
+                <li><a class="dropdown-item disabled" href="#" aria-disabled="true">Настройки</a></li>
+                <li id="divider"><hr class="dropdown-divider"></li>
+                <li id="login"><a class="dropdown-item" href="#">Вход</a></li>
+                <li id="signin"><a class="dropdown-item" href="#">Регистрация</a></li>
               </ul>
             </li>
-            <li class="nav-item">
-              <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
-            </li>
-          </ul>
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="#"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
-            <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
           </ul>
         </div>
       </div>
     </nav>
-{{end}}
-
-{{define "modal"}}
-    <div class="modal fade" id="modal" tabindex="-1" role="dialog" data-bs-backdrop="static" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-fullscreen" role="document">
-            <div class="modal-content bg-dark">
-                <div class="modal-header">
-                    <h5 class="modal-title">Modal title</h5>
-                    <button type="button" class="btn-close bg-light" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="carousel-inner slider">
-                        <img id="img_carousel" src="#" class="img-fluid z-depth-1" alt="...">
-                        <a class="btn-prev bg-secondary" role="button" id="btn_prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                        </a>
-                        <a class="btn-next bg-secondary" role="button" id="btn_next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                        </a>
-                    </div>
-                </div> 
-            </div>
-        </div>
-    </div>
-{{end}}
-
-{{define "album-list"}}
-    <div class="row row-cols-xxl-4 row-cols-xl-3 row-cols-lg-3 row-cols-md-2">
-    {{range .}}
-      <div class="col">
-        <div class="card shadow">
-          <img src="{{.AlbumImg}}" class="card-img-top card-image bg-dark" alt="Обложка альбома">
-          <div class="card-body">
-            <h4 class="card-title overflow-hidden"><span class="album-counter">{{.AlbumTitleComment}} </span>{{.AlbumTitle}}</h4>
-            <p class="card-text overflow-auto">{{.AlbumDescription}}</p>
-            <a href="#" role="button" data-href="gallery?album={{.AlbumPath}}" class="btn btn-dark card-btn shadow" data-bs-toggle="modal" data-bs-target="#myModal">В окне</a>
-            <a href="javascript:void(0);" role="button" onclick="OpenGallery('gallery?album={{.AlbumPath}}');" class="btn btn-dark card-btn shadow">На странице</a>
-          </div>
-        </div>
-      </div>
-    {{end}}
-  </div>
-{{end}}
-
-{{define "gallery.min"}}
-<div class="container">
-    <div class="modal-header gallery-buttons">
-        <h1 class="album-title">{{.AlbumTitle}}</h1>
-        <button type="button" class="btn-close bg-dark" href="javascript:void(0);" onclick="GoBack();" aria-label="Close"></button>
-    </div>
-    <div class="row" id="list">
-        {{range .Image}}
-        <div class="col-md-3 col-sm-4 col-xs-6 thumb">
-            <a data-fancybox="gallery" href="{{.Name}}">
-                <img class="img-responsive" src="{{.Thumb}}" alt="">
-            </a>
-        </div>
-        {{end}}
-    </div>
-    <br>
-    <div class="gallery-buttons">
-        <a role="button" class="btn btn-dark card-btn shadow" href="javascript:void(0);" onclick="ScrollToTop();" style="align-self: flex-end;">Наверх</a>
-        <a role="button" class="btn btn-dark card-btn shadow" href="javascript:void(0);" onclick="GoBack();" style="align-self: flex-end;">Назад к списку альбомов</a>
-    </div>
-    <br>
-</div>
 {{end}}
 
 {{ define "footer" }}

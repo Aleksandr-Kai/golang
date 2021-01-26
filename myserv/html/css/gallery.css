@@ -39,13 +39,3 @@
     border-bottom: 2px solid;
     border-image: linear-gradient(to right, #ffffff, rgb(245, 91, 1), #ffffff ) 47% 0%;
 }
-.row1{
-    border-width: 3px;
-    border-style: solid;
-    border-image: 
-        linear-gradient(
-        to bottom, 
-        rgb(245, 91, 1), 
-        rgba(0, 0, 0, 0)
-        ) 1 100%;
-}

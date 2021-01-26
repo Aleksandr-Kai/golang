@@ -32,7 +32,9 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	param := r.URL.Query().Get("get_content")
 
 	switch param {
-	case "":{err := rnd.HTML(w, http.StatusOK, "home", nil)
+	case "":{
+		tmpls := []string{"html/templates/home.html", "html/templates/templates.html"}
+		err := rnd.Template(w, http.StatusOK, tmpls, nil)
 		if err != nil{
 			fmt.Printf("%v\n", err)
 		}
@@ -56,7 +58,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 			params[i].AlbumDescription = album.Description
 			params[i].AlbumPath = album.Path
 		}
-		err := rnd.HTML(w, http.StatusOK, "album-list", params)
+		tmpls := []string{"html/templates/album-list.html"}
+		err := rnd.Template(w, http.StatusOK, tmpls, params)
 		if err != nil{
 			fmt.Printf("%v\n", err)
 		}
@@ -86,7 +89,8 @@ func galleryHandler(w http.ResponseWriter, r *http.Request)  {
 				params.Image[i].Thumb = "img?album=" + album.Path + "&name=" + image + "&size=s"
 				params.Image[i].Name = "img?album=" + album.Path + "&name=" + image + "&size=m"
 			}
-			err := rnd.HTML(w, http.StatusOK, "gallery.min", params)
+			tmpls := []string{"html/templates/gallery.html"}
+			err := rnd.Template(w, http.StatusOK, tmpls, params)
 			if err != nil{
 				fmt.Printf("%v\n", err)
 			}
@@ -125,9 +129,7 @@ func imgHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func init() {
-	rnd = renderer.New(renderer.Options{
-		ParseGlobPattern: "./html/templates/*.html",
-	})
+	rnd = renderer.New()
 }
 
 func main() {

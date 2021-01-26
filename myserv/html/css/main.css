@@ -149,9 +149,6 @@ hr{
 .container-gallery{
     height: 100%;
 }
-.modal-title{
-    color: #f2f2f2;
-}
 .album-list{
     margin-top: 30px;
     margin-bottom: 30px;
@@ -236,4 +233,9 @@ hr{
     transform: scale(1.5);
     border-radius: 0;
     z-index: 1;
+}
+.album-title{
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
 }

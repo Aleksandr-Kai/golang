@@ -2,7 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="946af124-6d81-4030-be96-6971642527b9" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../skimmer" beforeDir="false" afterPath="$PROJECT_DIR$/../skimmer" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/html/css/gallery.css" beforeDir="false" afterPath="$PROJECT_DIR$/html/css/gallery.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/html/css/main.css" beforeDir="false" afterPath="$PROJECT_DIR$/html/css/main.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/html/js/myscripts.js" beforeDir="false" afterPath="$PROJECT_DIR$/html/js/myscripts.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/html/templates/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/html/templates/home.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/html/templates/templates.html" beforeDir="false" afterPath="$PROJECT_DIR$/html/templates/templates.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,27 +78,5 @@
       </map>
     </option>
     <option name="oldMeFiltersMigrated" value="true" />
-  </component>
-  <component name="WindowStateProjectService">
-    <state x="756" y="459" key="#GOROOT" timestamp="1611635575915">
-      <screen x="0" y="0" width="1920" height="1050" />
-    </state>
-    <state x="756" y="459" key="#GOROOT/0.0.1920.1050/1920.0.1366.768@0.0.1920.1050" timestamp="1611635575915" />
-    <state width="1876" height="281" key="GridCell.Tab.0.bottom" timestamp="1611668393578">
-      <screen x="0" y="0" width="1920" height="1050" />
-    </state>
-    <state width="1876" height="281" key="GridCell.Tab.0.bottom/0.0.1920.1050/1920.0.1366.768@0.0.1920.1050" timestamp="1611668393578" />
-    <state width="1876" height="281" key="GridCell.Tab.0.center" timestamp="1611668393578">
-      <screen x="0" y="0" width="1920" height="1050" />
-    </state>
-    <state width="1876" height="281" key="GridCell.Tab.0.center/0.0.1920.1050/1920.0.1366.768@0.0.1920.1050" timestamp="1611668393578" />
-    <state width="1876" height="281" key="GridCell.Tab.0.left" timestamp="1611668393578">
-      <screen x="0" y="0" width="1920" height="1050" />
-    </state>
-    <state width="1876" height="281" key="GridCell.Tab.0.left/0.0.1920.1050/1920.0.1366.768@0.0.1920.1050" timestamp="1611668393578" />
-    <state width="1876" height="281" key="GridCell.Tab.0.right" timestamp="1611668393578">
-      <screen x="0" y="0" width="1920" height="1050" />
-    </state>
-    <state width="1876" height="281" key="GridCell.Tab.0.right/0.0.1920.1050/1920.0.1366.768@0.0.1920.1050" timestamp="1611668393578" />
   </component>
 </project>

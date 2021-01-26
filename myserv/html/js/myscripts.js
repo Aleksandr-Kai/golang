@@ -10,6 +10,8 @@ function onPageLoaded() {
             if (this.status!==200) return;
             document.getElementById('mb').innerHTML= this.responseText;
             document.getElementById('list').focus();
+            var title = $('h1#gallery-title').text();
+            $('h1#modal-title').text(title);
             $('.gallery-buttons').hide();
             UpdateFancyBox();
         };
