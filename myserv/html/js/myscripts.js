@@ -13,6 +13,11 @@ function onPageLoaded() {
             var title = $('h1#gallery-title').text();
             $('h1#modal-title').text(title);
             $('.gallery-buttons').hide();
+            $('img[data-description]').each(function(index){
+                var src = $(this).attr('src').replace('size=s', 'size=m');
+                var obj = $(this).closest('a');
+                obj.attr('href', src);
+            });
             UpdateFancyBox();
         };
         xhr.send();
@@ -23,9 +28,7 @@ function onPageLoaded() {
     $('a#card-btn').on('click', function(event){
         $('.album-list').load($(this).attr('data-href'));
     })
-    
 }
-
 function UpdateFancyBox(){
     $('[data-fancybox="gallery"]').fancybox({
         buttons: [
@@ -39,9 +42,6 @@ function UpdateFancyBox(){
           ],
         afterShow : function(instance, current) {
           var src =  current.src.replace('size=m', 'size=l');
-      
-          console.info('current.src: ' + current.src + '; download src: ' + src);
-      
           $("[data-fancybox-download]").attr('href', src);
         },
         loop : true,
@@ -54,11 +54,6 @@ function LoadAlbums(){
         $('img[src=""]').each(function(index){
             $(this).parent().parent().hide();
         });
-        /*
-        $('.card-img-top').on('click', function(){
-            var src = $(this).attr('src').replace('size=s', 'size=m');
-            $.fancybox.open('<div class="message"><img src="' + src + '></div>');
-        });*/
     });
     
 }

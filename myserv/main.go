@@ -1,18 +1,23 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/aleksandr-kai/golang/myserv/AlbumsTools"
 	"github.com/thedevsaddam/renderer"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 var rnd *renderer.Render
 
 type ImageInfo struct {
-	Name	string
-	Thumb	string
+	Name		string	`json:"-"`
+	Title		string	`json:"title"`
+	Description	string	`json:"description"`
 }
 
 type TmplParams struct {
@@ -86,8 +91,15 @@ func galleryHandler(w http.ResponseWriter, r *http.Request)  {
 		if album.Path == param {
 			params := TmplParams{album.Title, make([]ImageInfo, len(album.Images))}
 			for i, image := range album.Images {
-				params.Image[i].Thumb = "img?album=" + album.Path + "&name=" + image + "&size=s"
-				params.Image[i].Name = "img?album=" + album.Path + "&name=" + image + "&size=m"
+				params.Image[i].Name = "img?album=" + album.Path + "&name=" + image + "&size=s"
+				txt, err := ioutil.ReadFile(AlbumsTools.RootDir + album.Path + "/" + strings.TrimSuffix(image, filepath.Ext(image)) + ".txt") // пытаемся читать описание
+				if err == nil {
+					err = json.Unmarshal(txt, &params.Image[i])
+					//params.Image[i].Description = string(txt)
+					//fmt.Println("[galleryHandler] Description: " + string(txt))
+				}/*else{
+					fmt.Println("[galleryHandler] " + err.Error())
+				}*/
 			}
 			tmpls := []string{"html/templates/gallery.html"}
 			err := rnd.Template(w, http.StatusOK, tmpls, params)
