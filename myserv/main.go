@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 var rnd *renderer.Render
@@ -33,18 +34,75 @@ type TmplAlbum struct {
 	AlbumPath			string
 }
 
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Redirect(w, r, "/home", http.StatusFound)
+		return
+	}
+	inputLogin := r.FormValue("login")
+	inputPassword := r.FormValue("password")
+
+	fmt.Println("Login: ", inputLogin)
+	fmt.Println("Password: ", inputPassword)
+}
+
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Redirect(w, r, "/home", http.StatusFound)
+		return
+	}
+	inputLogin := r.FormValue("login")
+	inputPassword := r.FormValue("password")
+
+	fmt.Println("Login: ", inputLogin)
+	fmt.Println("Password: ", inputPassword)
+
+	coockie := http.Cookie{
+		Name: "session_id",
+		Value: inputLogin,
+		Expires: time.Now().Add(5 * time.Minute),
+	}
+	http.SetCookie(w, &coockie)
+	http.Redirect(w, r, "/home", http.StatusFound)
+}
+
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	session, err := r.Cookie("session_id")
+	if err != http.ErrNoCookie{
+		session.Expires = time.Now().AddDate(0, 0, -1)
+		http.SetCookie(w, session)
+	}
+	http.Redirect(w, r, "/home", http.StatusFound)
+}
+
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	param := r.URL.Query().Get("get_content")
 
 	switch param {
 	case "":{
+		session, err := r.Cookie("session_id")
+		if err == nil {
+			fmt.Printf("[homeHandler] Session: %v  %v  %v\n", session.Path, session.Name, session.Value)
+		}
 		tmpls := []string{"html/templates/home.html", "html/templates/templates.html"}
-		err := rnd.Template(w, http.StatusOK, tmpls, nil)
+		err = rnd.Template(w, http.StatusOK, tmpls, nil)
 		if err != nil{
 			fmt.Printf("%v\n", err)
 		}
 	}
 	case "album-list":{
+		session, err := r.Cookie("session_id")
+		if err != nil {
+			fmt.Println("[homeHandler] ", err.Error())
+			rnd.Template(w, http.StatusOK, []string{"html/templates/null.html"}, nil)
+			return
+		}
+		if session.Value != "AKai" {
+			fmt.Println("[homeHandler] В доступе отказано")
+			rnd.Template(w, http.StatusOK, []string{"html/templates/null.html"}, nil)
+			return
+		}
+
 		Albums := AlbumsTools.GetAlbums()
 		params := make([]TmplAlbum, len(Albums))
 
@@ -64,7 +122,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 			params[i].AlbumPath = album.Path
 		}
 		tmpls := []string{"html/templates/album-list.html"}
-		err := rnd.Template(w, http.StatusOK, tmpls, params)
+		err = rnd.Template(w, http.StatusOK, tmpls, params)
 		if err != nil{
 			fmt.Printf("%v\n", err)
 		}
@@ -147,6 +205,9 @@ func init() {
 func main() {
 	fs := http.FileServer(http.Dir("html"))
 	mux := http.NewServeMux()
+	mux.HandleFunc("/", rootHandler)
+	mux.HandleFunc("/login", loginHandler)
+	mux.HandleFunc("/logout", logoutHandler)
 	mux.HandleFunc("/home", homeHandler)
 	mux.HandleFunc("/gallery", galleryHandler)
 	mux.HandleFunc("/img", imgHandler)

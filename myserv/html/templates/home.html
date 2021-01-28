@@ -22,11 +22,11 @@
                             <img src="img/nophoto.png" alt="Scanfcode" style="width: 5vw;">
                           </div>
                           <h*>Введите свои данные</h*>
-                          <form action="#">
+                          <form action="/login" method="POST">
                               <div class="form-group">
                                   <div class="input-group">
                                       <span class="input-group-addon"><i class="fa fa-user ti-user"></i></span>
-                                      <input type="text" class="form-control" placeholder="Ваш логин">
+                                      <input type="text" class="form-control" placeholder="Ваш логин" name="login">
                                   </div>
                               </div>
                               
@@ -35,7 +35,7 @@
                               <div class="form-group">
                                   <div class="input-group">
                                       <span class="input-group-addon"><i class="fa fa-lock ti-unlock"></i></span>
-                                      <input type="password" class="form-control" placeholder="Ваш суперпароль">
+                                      <input type="password" class="form-control" placeholder="Ваш суперпароль" name="password">
                                   </div>
                               </div>
                               
