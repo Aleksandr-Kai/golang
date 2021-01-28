@@ -35,15 +35,7 @@ type TmplAlbum struct {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Redirect(w, r, "/home", http.StatusFound)
-		return
-	}
-	inputLogin := r.FormValue("login")
-	inputPassword := r.FormValue("password")
-
-	fmt.Println("Login: ", inputLogin)
-	fmt.Println("Password: ", inputPassword)
+	rnd.Template(w, http.StatusOK, []string{"html/templates/404.html"}, nil)
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,6 +65,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, session)
 	}
 	http.Redirect(w, r, "/home", http.StatusFound)
+	fmt.Println("[logoutHandler] Session closed")
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
