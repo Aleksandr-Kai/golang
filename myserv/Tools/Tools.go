@@ -1,4 +1,4 @@
-package AlbumsTools
+package Tools
 
 import (
 	"encoding/json"

@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/aleksandr-kai/golang/myserv/AlbumsTools"
+	"github.com/aleksandr-kai/golang/myserv/Tools"
 	"github.com/thedevsaddam/renderer"
 	"io/ioutil"
 	"net/http"
@@ -84,19 +84,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	case "album-list":{
-		session, err := r.Cookie("session_id")
-		if err != nil {
-			fmt.Println("[homeHandler] ", err.Error())
-			rnd.Template(w, http.StatusOK, []string{"html/templates/null.html"}, nil)
-			return
-		}
-		if session.Value != "AKai" {
-			fmt.Println("[homeHandler] В доступе отказано")
-			rnd.Template(w, http.StatusOK, []string{"html/templates/null.html"}, nil)
-			return
-		}
-
-		Albums := AlbumsTools.GetAlbums()
+		Albums := Tools.GetAlbums()
 		params := make([]TmplAlbum, len(Albums))
 
 		for i, album := range Albums {
@@ -115,10 +103,26 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 			params[i].AlbumPath = album.Path
 		}
 		tmpls := []string{"html/templates/album-list.html"}
-		err = rnd.Template(w, http.StatusOK, tmpls, params)
+		err := rnd.Template(w, http.StatusOK, tmpls, params)
 		if err != nil{
 			fmt.Printf("%v\n", err)
 		}
+	}
+	case "test":{
+		session, err := r.Cookie("session_id")
+		if err != nil {
+			fmt.Println("[homeHandler] ", err.Error())
+			rnd.Template(w, http.StatusOK, []string{"html/templates/null.html"}, nil)
+			return
+		}
+		if session.Value != "AKai" {
+			fmt.Println("[homeHandler] В доступе отказано")
+			rnd.Template(w, http.StatusOK, []string{"html/templates/null.html"}, nil)
+			return
+		}
+	}
+	case "header":{
+
 	}
 	default:
 		fmt.Fprintf(w, "Запрос не может быть обработан!")
@@ -137,13 +141,13 @@ func galleryHandler(w http.ResponseWriter, r *http.Request)  {
 		fmt.Printf("[galleryHandler] Параметр <album> не найден: %v\n", r.URL)
 		return
 	}
-	Albums := AlbumsTools.GetAlbums()
+	Albums := Tools.GetAlbums()
 	for _, album := range Albums {
 		if album.Path == param {
 			params := TmplParams{album.Title, make([]ImageInfo, len(album.Images))}
 			for i, image := range album.Images {
 				params.Image[i].Name = "img?album=" + album.Path + "&name=" + image + "&size=s"
-				txt, err := ioutil.ReadFile(AlbumsTools.RootDir + album.Path + "/" + strings.TrimSuffix(image, filepath.Ext(image)) + ".txt") // пытаемся читать описание
+				txt, err := ioutil.ReadFile(Tools.RootDir + album.Path + "/" + strings.TrimSuffix(image, filepath.Ext(image)) + ".txt") // пытаемся читать описание
 				if err == nil {
 					err = json.Unmarshal(txt, &params.Image[i])
 					//params.Image[i].Description = string(txt)
@@ -172,16 +176,16 @@ func imgHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("name")
 	size := r.URL.Query().Get("size")
 
-	path := AlbumsTools.RootDir + album + "/" + size + "/" + name
+	path := Tools.RootDir + album + "/" + size + "/" + name
 	//fmt.Printf("ServeFile: %v\n", path)
 	_, err := os.Stat(path)
 	if err != nil {
 		//fmt.Printf("File exists: %v\n", err.Error())
 		w.Header().Set("Content-Type", "image/jpeg")
 		if size == "s" {
-			http.ServeFile(w, r, AlbumsTools.RootDir + "no_images.png")
+			http.ServeFile(w, r, Tools.RootDir + "no_images.png")
 		}else{
-			http.ServeFile(w, r, AlbumsTools.RootDir + album + "/s/" + name)
+			http.ServeFile(w, r, Tools.RootDir + album + "/s/" + name)
 		}
 
 	}else{
