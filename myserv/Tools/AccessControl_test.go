@@ -28,14 +28,14 @@ func TestFindUser(t *testing.T) {
 	fmt.Println("            TestFindUser")
 	userList = make([]User, 3)
 	copy(userList, tstList)
-	i, user := FindUser("admin")
-	if (i != 2) || (user.Name != "admin") || (user.Password != "admin") || (user.Access != 0){
-		t.Error("[TestFindUser] Пользователь не найден: ", i, "/", user)
+	user, err := FindUser("admin")
+	if (err != nil) || (user.Name != "admin") || (user.Password != "admin") || (user.Access != 0){
+		t.Error("[TestFindUser] Пользователь не найден: ", user)
 	}
 	fmt.Printf("[TestFindUser] Искомый пользователь: admin %v\n[TestFindUser] В массиве: %v\n", user, userList)
-	i, user = FindUser("null")
-	if i != -1 {
-		t.Error("[TestFindUser] Функция вернула данные пользователя null: ", i, "/", user)
+	user, err = FindUser("null")
+	if err == nil {
+		t.Error("[TestFindUser] Функция вернула данные пользователя null: ", user)
 	}
 	fmt.Printf("[TestFindUser] Искомый пользователь: null %v\n", user)
 }
@@ -45,11 +45,18 @@ func TestNewUser(t *testing.T) {
 	fmt.Println("            TestNewUser")
 	userList = make([]User, 3)
 	copy(userList, tstList)
-	NewUser("newuser", "password", 10)
+	err := NewUser("newuser", "password", 10)
+	if err != nil {
+		t.Error("[TestNewUser] Ошибка добавления пользователя: ", err.Error())
+	}
 	if !reflect.DeepEqual(userList, tstNewUser) {
 		t.Error("[TestNewUser] Пользователь не добавлен: ", userList)
 	}
 	fmt.Printf("[TestNewUser] Рабочий массив: %v\n[TestNewUser] Эталонный массив: %v\n", userList, tstNewUser)
+	err = NewUser("newuser", "password", 10)
+	if err == nil {
+		t.Error("[TestNewUser] Не обработано добавление существующего пользователя")
+	}
 }
 
 func TestRemoveUser(t *testing.T) {
@@ -92,9 +99,8 @@ func TestSaveUsers(t *testing.T) {
 func TestGetToken(t *testing.T) {
 	fmt.Println("=============================================================================================================")
 	fmt.Println("            TestGetToken")
-	exp := time.Unix(0,0)
-	s := Session{User{"admin", "admin", 0}, exp}
-	token := GetToken(s)
+	s := User{"admin", "admin", 0}
+	token := GetToken(s, time.Date(2222, 1, 1, 0, 0, 0, 0, time.UTC))
 	fmt.Println("[TestGetToken] ", token)
 }
 
@@ -104,18 +110,38 @@ func TestParseToken(t *testing.T) {
 	userList = make([]User, 3)
 	copy(userList, tstList)
 	fmt.Println("[TestParseToken] Валидный токен")
-	val, err := ParseToken("eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMiLCJleHAiOiIxOTcwLTAxLTAxVDAzOjAwOjAwKzAzOjAwIiwibmFtZSI6ImFkbWluIn0=.ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnpkV0lpT2lJeE1qTWlMQ0psZUhBaU9pSXhPVGN3TFRBeExUQXhWREF6T2pBd09qQXdLekF6T2pBd0lpd2libUZ0WlNJNkltRmtiV2x1SW4wPQ==")
-	tst := Session{User{"admin", "admin", 0}, time.Unix(0,0)}
+	val, err := ParseToken("eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6IjIyMjItMDEtMDFUMDA6MDA6MDBaIn0=.ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnpkV0lpT2lKaFpHMXBiaUlzSW1WNGNDSTZJakl5TWpJdE1ERXRNREZVTURBNk1EQTZNREJhSW4wPQ==")
+	tst := User{"admin", "admin", 0}
 	if val != tst {
 		fmt.Printf("[TestParseToken] Error: %v\n[TestParseToken] Получено: %v\n[TestParseToken] Ожидалось: %v\n", err, val, tst)
 		t.Error("[TestParseToken] Валидный токен не расшифрован")
 	}
 
 	fmt.Println("[TestParseToken] Не валидный токен")
-	val, err = ParseToken("")
+	val, err = ParseToken("eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6IjE5NzAtMDEtMDFUMDM6MDA6MDArMDM6MDAifQ==.ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnpkV0lpT2lKaFpHMXBiaUlzSW1WNGNDSTZJakU1TnpBdE1ERXRNREZVTURNNk1EQTZNREFyTURNNk1EQWlmUT09")
 
 	if err == nil {
 		fmt.Printf("[TestParseToken] Error: %v\n[TestParseToken] Session: %v\n", err, val)
 		t.Error("[TestParseToken] Не валидный токен не вернул ошибки")
+	}
+}
+
+func TestLogin(t *testing.T) {
+	fmt.Println("=============================================================================================================")
+	fmt.Println("            TestLogin")
+	userList = make([]User, 3)
+	copy(userList, tstList)
+	token, err := Login("admin", "admin")
+	if err != nil {
+		t.Error("[TestLogin] ", err.Error())
+	}
+	fmt.Printf("[TestLogin] Полученный токен: %v\n", token)
+	token, err = Login("admin", "")
+	if (token != "") || (err == nil){
+		t.Error("[TestLogin] Не обрабатывается неправильный пароль")
+	}
+	token, err = Login("", "")
+	if (token != "") || (err == nil){
+		t.Error("[TestLogin] Не обрабатывается неправильное имя пользователя")
 	}
 }
