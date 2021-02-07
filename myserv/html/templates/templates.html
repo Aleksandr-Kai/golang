@@ -29,18 +29,69 @@
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Гость
+                {{.UserName}}
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item disabled" href="#" aria-disabled="true">Настройки</a></li>
-                <li id="divider"><hr class="dropdown-divider"></li>
-                <li id="login"><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modal-login">Вход</a></li>
+                {{.UserMenu}}
               </ul>
             </li>
           </ul>
         </div>
       </div>
     </nav>
+    
+{{end}}
+
+{{define "login-modal"}}
+<div class="modal fade" id="modal-login" role="dialog">
+  <div class="modal-dialog modal-md">
+  
+      <!-- Modal content-->
+      <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Вход/Регистрация</h5>
+            <button type="button" class="btn-close bg-light" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <div class="login-block">
+                  <div>
+                    <img src="img/nophoto.png" alt="Scanfcode" style="width: 5vw;">
+                  </div>
+                  <h*>Введите свои данные</h*>
+                  
+                  <form id="login-form">
+                      <div class="form-group">
+                          <div class="input-group">
+                              <span class="input-group-addon"><i class="fa fa-user ti-user"></i></span>
+                              <input type="text" class="form-control" placeholder="Ваш логин" id="inp-login">
+                          </div>
+                      </div>
+                      
+                      <hr class="hr-xs">
+                      
+                      <div class="form-group">
+                          <div class="input-group">
+                              <span class="input-group-addon"><i class="fa fa-lock ti-unlock"></i></span>
+                              <input type="password" class="form-control" placeholder="Ваш суперпароль" id="inp-pass">
+                          </div>
+                      </div>
+                      
+                      <button class="btn btn-primary btn-block">ВОЙТИ</button>
+                      <div class="login-footer">
+                          
+                      </div>
+                   
+                  </form>
+              </div>
+                   
+              <div class="login-links">
+                  <p class="text-center">Еще нет аккаунта? <a class="txt-brand" href="user-login.html"><font color=#29aafe>Регистрируйся</font></a></p>
+              </div>
+          </div>
+      </div>
+    
+  </div>
+</div>
 {{end}}
 
 {{ define "footer" }}

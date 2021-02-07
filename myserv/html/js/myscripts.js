@@ -28,6 +28,35 @@ function onPageLoaded() {
     $('a#card-btn').on('click', function(event){
         $('.album-list').load($(this).attr('data-href'));
     })
+    $('#login-form').on('submit', function(e){
+        e.preventDefault();
+        var login = $('#inp-login').val();
+        var password = $('#inp-pass').val();
+        
+        if(login != '' && password != ''){
+            $.ajax({
+                url:"/login",
+                method:"POST",
+                data:{password:password, login:login},
+                success:function(res){
+                    //console.log(res)
+                    var obj = $.parseJSON(res);
+                    
+                    if(obj.success){
+                        if(obj.message != '') alert(obj.message);
+                        location.reload();
+                    }
+                    else{
+                        if(obj.message != '') alert(obj.message); else alert('Неверный логин или пароль')
+                    }
+                }
+            })
+        }
+        else{
+            alert('Нужно заполнить все поля');
+        }
+        
+    })
 }
 function UpdateFancyBox(){
     $('[data-fancybox="gallery"]').fancybox({

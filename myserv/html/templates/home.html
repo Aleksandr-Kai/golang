@@ -5,56 +5,9 @@
     </head>
     
     <body>
-        {{template "navbar"}}
+        {{template "navbar" .}}
         <br>
-        <div class="modal fade" id="modal-login" role="dialog">
-          <div class="modal-dialog modal-md">
-          
-              <!-- Modal content-->
-              <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title">Вход/Регистрация</h5>
-                    <button type="button" class="btn-close bg-light" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                      <div class="login-block">
-                          <div>
-                            <img src="img/nophoto.png" alt="Scanfcode" style="width: 5vw;">
-                          </div>
-                          <h*>Введите свои данные</h*>
-                          <form action="/login" method="POST">
-                              <div class="form-group">
-                                  <div class="input-group">
-                                      <span class="input-group-addon"><i class="fa fa-user ti-user"></i></span>
-                                      <input type="text" class="form-control" placeholder="Ваш логин" name="login">
-                                  </div>
-                              </div>
-                              
-                              <hr class="hr-xs">
-                              
-                              <div class="form-group">
-                                  <div class="input-group">
-                                      <span class="input-group-addon"><i class="fa fa-lock ti-unlock"></i></span>
-                                      <input type="password" class="form-control" placeholder="Ваш суперпароль" name="password">
-                                  </div>
-                              </div>
-                              
-                              <button class="btn btn-primary btn-block" type="submit">ВОЙТИ</button>
-                              <div class="login-footer">
-                                  
-                              </div>
-                           
-                          </form>
-                      </div>
-                           
-                      <div class="login-links">
-                          <p class="text-center">Еще нет аккаунта? <a class="txt-brand" href="user-login.html"><font color=#29aafe>Регистрируйся</font></a></p>
-                      </div>
-                  </div>
-              </div>
-            
-          </div>
-        </div>
+        {{template "login-modal"}}
         <!------------------------------------------------------------------------------------------>
         <div class="modal fade" id="myModal" role="dialog">
           <div class="modal-dialog modal-xl modal-dialog-scrollable">

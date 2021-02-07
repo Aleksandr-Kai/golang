@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-var tstList = []User{{"AKai","hitomi",0},{"guest", "", 10}, {"admin","admin",0}}
-var tstNewUser = []User{{"AKai","hitomi",0},{"guest", "", 10}, {"admin","admin",0}, {"newuser","password",10}}
+var tstList = []User{{"AKai","hitomi",0, false},{"guest", "", 10, false}, {"admin","admin",0, true}}
+var tstNewUser = []User{{"AKai","hitomi",0, false},{"guest", "", 10, false}, {"admin","admin",0, true}, {"newuser","password",10, false}}
 
 
 func TestInit(t *testing.T) {
@@ -23,21 +23,21 @@ func TestInit(t *testing.T) {
 	fmt.Printf("[TestInit] Загруженные данные: %v\n[TestInit] Эталонный массив: %v\n", userList, tstList)
 }
 
-func TestFindUser(t *testing.T) {
+func TestGetUser(t *testing.T) {
 	fmt.Println("=============================================================================================================")
-	fmt.Println("            TestFindUser")
+	fmt.Println("            TestGetUser")
 	userList = make([]User, 3)
 	copy(userList, tstList)
-	user, err := FindUser("admin")
+	user, err := GetUser("admin")
 	if (err != nil) || (user.Name != "admin") || (user.Password != "admin") || (user.Access != 0){
-		t.Error("[TestFindUser] Пользователь не найден: ", user)
+		t.Error("[TestGetUser] Пользователь не найден: ", user)
 	}
-	fmt.Printf("[TestFindUser] Искомый пользователь: admin %v\n[TestFindUser] В массиве: %v\n", user, userList)
-	user, err = FindUser("null")
+	fmt.Printf("[TestGetUser] Искомый пользователь: admin %v\n[TestFindUser] В массиве: %v\n", user, userList)
+	user, err = GetUser("null")
 	if err == nil {
-		t.Error("[TestFindUser] Функция вернула данные пользователя null: ", user)
+		t.Error("[TestGetUser] Функция вернула данные пользователя null: ", user)
 	}
-	fmt.Printf("[TestFindUser] Искомый пользователь: null %v\n", user)
+	fmt.Printf("[TestGetUser] Искомый пользователь: null %v\n", user)
 }
 
 func TestNewUser(t *testing.T) {
@@ -65,7 +65,7 @@ func TestRemoveUser(t *testing.T) {
 	userList = make([]User, 3)
 	copy(userList, tstList)
 	RemoveUser("guest")
-	tst := []User{{"AKai","hitomi",0},{"admin","admin",0}}
+	tst := []User{{"AKai","hitomi",0, false},{"admin","admin",0, false}}
 	if !reflect.DeepEqual(userList, tst) {
 		t.Error("[TestRemoveUser] Пользователь не удален: ", userList)
 	}
@@ -99,7 +99,7 @@ func TestSaveUsers(t *testing.T) {
 func TestGetToken(t *testing.T) {
 	fmt.Println("=============================================================================================================")
 	fmt.Println("            TestGetToken")
-	s := User{"admin", "admin", 0}
+	s := User{"admin", "admin", 0, false}
 	token := GetToken(s, time.Date(2222, 1, 1, 0, 0, 0, 0, time.UTC))
 	fmt.Println("[TestGetToken] ", token)
 }
@@ -111,7 +111,7 @@ func TestParseToken(t *testing.T) {
 	copy(userList, tstList)
 	fmt.Println("[TestParseToken] Валидный токен")
 	val, err := ParseToken("eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6IjIyMjItMDEtMDFUMDA6MDA6MDBaIn0=.ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnpkV0lpT2lKaFpHMXBiaUlzSW1WNGNDSTZJakl5TWpJdE1ERXRNREZVTURBNk1EQTZNREJhSW4wPQ==")
-	tst := User{"admin", "admin", 0}
+	tst := User{"admin", "admin", 0, true}
 	if val != tst {
 		fmt.Printf("[TestParseToken] Error: %v\n[TestParseToken] Получено: %v\n[TestParseToken] Ожидалось: %v\n", err, val, tst)
 		t.Error("[TestParseToken] Валидный токен не расшифрован")

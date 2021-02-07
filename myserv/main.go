@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aleksandr-kai/golang/myserv/Tools"
 	"github.com/thedevsaddam/renderer"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -34,6 +35,11 @@ type TmplAlbum struct {
 	AlbumPath			string
 }
 
+type LoginResponse struct {
+	Success		bool	`json:"success"`
+	Message		string	`json:"message"`
+}
+
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	rnd.Template(w, http.StatusOK, []string{"html/templates/404.html"}, nil)
 }
@@ -46,27 +52,63 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	inputLogin := r.FormValue("login")
 	inputPassword := r.FormValue("password")
 
-	fmt.Println("Login: ", inputLogin)
-	fmt.Println("Password: ", inputPassword)
-
-	coockie := http.Cookie{
-		Name: "session_id",
-		Value: inputLogin,
-		Expires: time.Now().Add(5 * time.Minute),
+	token, err := Tools.Login(inputLogin, inputPassword)
+	resp := LoginResponse{false, "Unknown error"}
+	if err != nil {
+		println("[loginHandler] Ошибка получения токена: ", err.Error())
+		resp.Success = false
+		resp.Message = err.Error()
+	}else{
+		coockie := http.Cookie{
+			Name: "session_id",
+			Value: token,
+			Expires: time.Now().Add(512 * time.Hour),
+			Path: "/",
+		}
+		http.SetCookie(w, &coockie)
+		fmt.Println("[loginHandler] Выполнен вход под именем [", inputLogin, "]")
+		resp.Success = true
+		resp.Message = ""
 	}
-	http.SetCookie(w, &coockie)
-	http.Redirect(w, r, "/home", http.StatusFound)
+	answer, _ := json.Marshal(resp)
+	w.Write(answer)
+	//http.Redirect(w, r, "/home", http.StatusFound)
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := r.Cookie("session_id")
 	if err != http.ErrNoCookie{
+		//fmt.Println("[logoutHandler] Куки получено")
 		session.Expires = time.Now().AddDate(0, 0, -1)
+		user, err := Tools.ParseToken(session.Value)
+		if err != nil{
+			println("[logoutHandler] ", err.Error())
+		}else{
+			Tools.Logout(user.Name)
+			fmt.Println("[logoutHandler] Выход выполнен")
+		}
+		session.Value = ""
 		http.SetCookie(w, session)
+	}else{
+		fmt.Println("[logoutHandler] ", err.Error())
 	}
+
 	http.Redirect(w, r, "/home", http.StatusFound)
-	fmt.Println("[logoutHandler] Session closed")
 }
+
+var menuGuest = template.HTML(`
+	<li id="login"><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modal-login">Вход</a></li>
+`)
+var menuAdmin = template.HTML(`
+	<li><a class="dropdown-item" href="#" aria-disabled="true">Настройки</a></li>
+	<li id="divider"><hr class="dropdown-divider"></li>
+	<li id="logout"><a class="dropdown-item" href="/logout">Выход</a></li>
+`)
+var menuUser = template.HTML(`
+	<li><a class="dropdown-item disabled" href="#" aria-disabled="true">Настройки</a></li>
+	<li id="divider"><hr class="dropdown-divider"></li>
+	<li id="logout"><a class="dropdown-item" href="/logout">Выход</a></li>
+`)
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	param := r.URL.Query().Get("get_content")
@@ -74,13 +116,42 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	switch param {
 	case "":{
 		session, err := r.Cookie("session_id")
-		if err == nil {
-			fmt.Printf("[homeHandler] Session: %v  %v  %v\n", session.Path, session.Name, session.Value)
+		var user Tools.User
+		if err != nil {
+			println("[homeHandler] ", err.Error())
+			user = Tools.User{Name: "Guest", Password: "", Access: 10, Active: true}
+		}else{
+			user, err = Tools.ParseToken(session.Value)
+			if err != nil {
+				println("[homeHandler] ", err.Error())
+				user = Tools.User{Name: "Guest", Password: "", Access: 10, Active: true}
+			}
 		}
+		fmt.Printf("[homeHandler] Запрос от пользователя: %v\n", user)
+		/*
+		tmplFuncs := template.FuncMap{"UserMenu" : UserMenu}
+		tmpl, err := template.New("").Funcs(tmplFuncs).ParseFiles("html/templates/home.html", "html/templates/templates.html")
+		if err == nil {
+			err = tmpl.ExecuteTemplate(w, "home.html", struct{UserName string}{user.Name})
+			if err != nil {
+				fmt.Println("[homeHandler] ", err.Error())
+			}
+			return
+		}
+		fmt.Println("[homeHandler] ", err.Error())*/
+
 		tmpls := []string{"html/templates/home.html", "html/templates/templates.html"}
-		err = rnd.Template(w, http.StatusOK, tmpls, nil)
+		var menu template.HTML
+		switch user.Access {
+		case 0: menu = menuAdmin
+		case 1: menu = menuUser
+		default:
+			menu = menuGuest
+		}
+		prms := struct{UserName string; UserMenu interface{}}{user.Name, menu}
+		err = rnd.Template(w, http.StatusOK, tmpls, prms)
 		if err != nil{
-			fmt.Printf("%v\n", err)
+			println("[homeHandler] %v\n", err.Error())
 		}
 	}
 	case "album-list":{
@@ -200,6 +271,8 @@ func init() {
 }
 
 func main() {
+	Tools.Init("authdata.json")
+	Tools.NewUser("Guest", "", 10)
 	fs := http.FileServer(http.Dir("html"))
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", rootHandler)

@@ -15,6 +15,7 @@ type User struct {
 	Name		string	`json:"name"`
 	Password	string	`json:"password"`
 	Access		int		`json:"access_lvl"`
+	Active		bool	`json:"-"`
 }
 
 type TokenHeader struct {
@@ -29,21 +30,31 @@ type TokenData struct {
 
 var userList []User
 
-func FindUser(name string) (User, error){
+func GetUser(name string) (User, error){
 	for _, u := range userList{
 		if u.Name == name{
 			return u, nil
 		}
 	}
-	return User{}, errors.New("Пользователь с таким именем не найден")
+	return User{}, errors.New("Пользователь [" + name + "] не найден")
+}
+
+func UpdateUser(user User) error{
+	for i, u := range userList{
+		if u.Name == user.Name{
+			userList[i] = user
+			return nil
+		}
+	}
+	return errors.New("Пользователь [" + user.Name + "] не найден")
 }
 
 func NewUser(name, password string, access int) error{
-	_, err := FindUser(name)
+	_, err := GetUser(name)
 	if err == nil {
-		return errors.New("Пользователь с таким именем уже существует")
+		return errors.New("Пользователь [" + name + "] уже существует")
 	}
-	userList = append(userList, User{name, password, access})
+	userList = append(userList, User{name, password, access, false})
 	return nil
 }
 
@@ -61,13 +72,16 @@ func RemoveUser(name string) {
 func Init(path string){
 	userList = make([]User, 0, 10)
 	txt, err := ioutil.ReadFile(path)
-	if err == nil {
-		err = json.Unmarshal(txt, &userList)
-		if err != nil {
-			fmt.Println("[Auth Init] ", err.Error())
-			return
-		}
+	if err != nil {
+		println("[Auth Init] ", err.Error())
+		return
 	}
+	err = json.Unmarshal(txt, &userList)
+	if err != nil {
+		println("[Auth Init] ", err.Error())
+		return
+	}
+	fmt.Printf("[Auth Init] %v\n", userList)
 }
 
 func SaveUsers(path string) bool {
@@ -85,14 +99,29 @@ func SaveUsers(path string) bool {
 }
 
 func Login(name, password string) (token string, err error){
-	user, err := FindUser(name)
+	user, err := GetUser(name)
 	if err != nil {
 		return "", err
 	}
 	if user.Password != password {
 		return "", errors.New("Неверный пароль")
 	}
+	user.Active = true
+	UpdateUser(user)
 	return GetToken(user, time.Now().Add(168 * time.Hour)), nil
+}
+
+func Logout(name string){
+	user, err := GetUser(name)
+	if err != nil {
+		println("[Logout] ", err.Error())
+		return
+	}
+	user.Active = false
+	err = UpdateUser(user)
+	if err != nil {
+		println("[Logout] ", err.Error())
+	}
 }
 
 func GetToken(user User, expiration time.Time) string{
@@ -114,7 +143,7 @@ func ParseToken(token string) (User, error){
 	}
 	partsDec := strings.Split(string(dec), ".")
 	if (len(partsDec) != 2) || (parts[0] != partsDec[0]) || (parts[1] != partsDec[1]) {
-		return User{}, errors.New("[ParseToken] Не валидная подпись")
+		return User{}, errors.New("Не валидная подпись")
 	}
 	//th, err := b64.StdEncoding.DecodeString(parts[0])
 	td, err := b64.StdEncoding.DecodeString(parts[1])
@@ -129,9 +158,13 @@ func ParseToken(token string) (User, error){
 	if tds.Expiration.Before(time.Now()) {
 		return User{}, errors.New("[ParseToken] Токен просрочен")
 	}
-	usr, err := FindUser(tds.Subject)
+	usr, err := GetUser(tds.Subject)
 	if err != nil {
 		return User{}, errors.New("[ParseToken] Токен не соответствует ни одному пользователю")
+	}
+	if !usr.Active {
+		fmt.Printf("[ParseToken] %v\n", usr)
+		return User{}, errors.New("Токен не актуален, выполнен выход")
 	}
 	return usr, nil
 }
