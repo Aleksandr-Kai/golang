@@ -4,10 +4,10 @@
     <list default="true" id="946af124-6d81-4030-be96-6971642527b9" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Tools/AccessControl.go" beforeDir="false" afterPath="$PROJECT_DIR$/Tools/AccessControl.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Tools/AccessControl_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/Tools/AccessControl_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/html/css/main.css" beforeDir="false" afterPath="$PROJECT_DIR$/html/css/main.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/html/js/myscripts.js" beforeDir="false" afterPath="$PROJECT_DIR$/html/js/myscripts.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/html/templates/gallery.html" beforeDir="false" afterPath="$PROJECT_DIR$/html/templates/gallery.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/html/templates/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/html/templates/home.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/html/templates/templates.html" beforeDir="false" afterPath="$PROJECT_DIR$/html/templates/templates.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -49,6 +49,12 @@
     <property name="go.sdk.automatically.set" value="true" />
     <property name="go.vendoring.notification.had.been.shown" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
   </component>

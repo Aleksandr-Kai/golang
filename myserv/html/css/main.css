@@ -65,6 +65,12 @@ hr{
     border-color: #2d2d2d;
 }
 
+.nav-link{
+    Font-family: 'Abril Fatface', cursive;
+    font-size: x-large;
+    color: rgb(245, 91, 1);
+}
+
 .logo{
     width: auto;
     padding: 0;

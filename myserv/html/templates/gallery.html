@@ -3,7 +3,7 @@
         <h1 class="album-title" id="gallery-title">{{.AlbumTitle}}</h1>
         <button type="button" class="btn-close bg-dark" href="javascript:void(0);" onclick="GoBack();" aria-label="Close"></button>
     </div>
-    <div class="row" id="list">
+    <div class="row" id="imgs-grid">
         {{range .Image}}
         <div class="col-md-3 col-sm-4 col-xs-6 thumb">
             <a class="caption-link" data-fancybox="gallery" href="#" data-title="{{.Title}}" data-description="{{.Description}}">

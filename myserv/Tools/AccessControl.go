@@ -13,6 +13,7 @@ import (
 
 type User struct {
 	Name		string	`json:"name"`
+	PublicName	string	`json:"public_name"`
 	Password	string	`json:"password"`
 	Access		int		`json:"access_lvl"`
 	Active		bool	`json:"-"`
@@ -49,12 +50,12 @@ func UpdateUser(user User) error{
 	return errors.New("Пользователь [" + user.Name + "] не найден")
 }
 
-func NewUser(name, password string, access int) error{
+func NewUser(name, publicName, password string, access int) error{
 	_, err := GetUser(name)
 	if err == nil {
 		return errors.New("Пользователь [" + name + "] уже существует")
 	}
-	userList = append(userList, User{name, password, access, false})
+	userList = append(userList, User{name, publicName, password, access, false})
 	return nil
 }
 

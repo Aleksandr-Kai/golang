@@ -38,6 +38,7 @@ type TmplAlbum struct {
 type LoginResponse struct {
 	Success		bool	`json:"success"`
 	Message		string	`json:"message"`
+	UserName	string	`json:"user_name"`
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +54,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	inputPassword := r.FormValue("password")
 
 	token, err := Tools.Login(inputLogin, inputPassword)
-	resp := LoginResponse{false, "Unknown error"}
+	resp := LoginResponse{false, "Unknown error", "Гость"}
 	if err != nil {
 		println("[loginHandler] Ошибка получения токена: ", err.Error())
 		resp.Success = false
@@ -69,6 +70,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("[loginHandler] Выполнен вход под именем [", inputLogin, "]")
 		resp.Success = true
 		resp.Message = ""
+		resp.UserName = inputLogin
 	}
 	answer, _ := json.Marshal(resp)
 	w.Write(answer)
@@ -96,19 +98,31 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/home", http.StatusFound)
 }
 
-var menuGuest = template.HTML(`
-	<li id="login"><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modal-login">Вход</a></li>
-`)
-var menuAdmin = template.HTML(`
-	<li><a class="dropdown-item" href="#" aria-disabled="true">Настройки</a></li>
-	<li id="divider"><hr class="dropdown-divider"></li>
-	<li id="logout"><a class="dropdown-item" href="/logout">Выход</a></li>
-`)
-var menuUser = template.HTML(`
-	<li><a class="dropdown-item disabled" href="#" aria-disabled="true">Настройки</a></li>
-	<li id="divider"><hr class="dropdown-divider"></li>
-	<li id="logout"><a class="dropdown-item" href="/logout">Выход</a></li>
-`)
+func GetUserMenu(lvl int) template.HTML{
+	var mLogin = template.HTML(`
+		<li id="login"><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modal-login">Вход</a></li>
+	`)
+	var mLogout = template.HTML(`
+		<li id="logout"><a class="dropdown-item" href="/logout">Выход</a></li>
+	`)
+	var mConfig = template.HTML(`
+		<li><a class="dropdown-item" href="javascript:void(0);" onclick="LoadConfig();">Настройки</a></li>
+	`)
+	var mLine = template.HTML(`
+		<li id="divider"><hr class="dropdown-divider"></li>
+	`)
+
+	switch lvl{
+	case 0:{
+		return mConfig + mLine + mLogout
+	}
+	case 1:
+		return mLogout
+	default:
+		return mLogin
+	}
+
+}
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	param := r.URL.Query().Get("get_content")
@@ -117,14 +131,23 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	case "":{
 		session, err := r.Cookie("session_id")
 		var user Tools.User
+
 		if err != nil {
 			println("[homeHandler] ", err.Error())
-			user = Tools.User{Name: "Guest", Password: "", Access: 10, Active: true}
+			user, err = Tools.GetUser("Guest")
+			if err != nil{
+				println("[homeHandler] ", err.Error())
+				user = Tools.User{Name: "Guest", PublicName: "Гость", Password: "", Access: 10, Active: true}
+			}
 		}else{
 			user, err = Tools.ParseToken(session.Value)
 			if err != nil {
 				println("[homeHandler] ", err.Error())
-				user = Tools.User{Name: "Guest", Password: "", Access: 10, Active: true}
+				user, err = Tools.GetUser("Guest")
+				if err != nil{
+					println("[homeHandler] ", err.Error())
+					user = Tools.User{Name: "Guest", PublicName: "Гость", Password: "", Access: 10, Active: true}
+				}
 			}
 		}
 		fmt.Printf("[homeHandler] Запрос от пользователя: %v\n", user)
@@ -141,17 +164,14 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("[homeHandler] ", err.Error())*/
 
 		tmpls := []string{"html/templates/home.html", "html/templates/templates.html"}
-		var menu template.HTML
-		switch user.Access {
-		case 0: menu = menuAdmin
-		case 1: menu = menuUser
-		default:
-			menu = menuGuest
+		name := user.PublicName
+		if name == ""{
+			name = user.Name
 		}
-		prms := struct{UserName string; UserMenu interface{}}{user.Name, menu}
+		prms := struct{UserName string; UserMenu interface{}}{name, GetUserMenu(user.Access)}
 		err = rnd.Template(w, http.StatusOK, tmpls, prms)
 		if err != nil{
-			println("[homeHandler] %v\n", err.Error())
+			println("[homeHandler] ", err.Error())
 		}
 	}
 	case "album-list":{
@@ -179,7 +199,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("%v\n", err)
 		}
 	}
-	case "test":{
+	case "config":{
+		/*
 		session, err := r.Cookie("session_id")
 		if err != nil {
 			fmt.Println("[homeHandler] ", err.Error())
@@ -190,7 +211,19 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("[homeHandler] В доступе отказано")
 			rnd.Template(w, http.StatusOK, []string{"html/templates/null.html"}, nil)
 			return
+		}*/
+		err := rnd.Template(w, http.StatusOK, []string{"html/templates/config.html"}, nil)
+		if err != nil{
+			println("[homeHandler] ", err.Error())
 		}
+		/*
+		var modal template.HTML
+		content, err := ioutil.ReadFile("html/templates/config.html")
+		if err != nil {
+			log.Fatal(err)
+		}else{
+			modal = template.HTML(content)
+		}*/
 	}
 	case "header":{
 
@@ -272,7 +305,15 @@ func init() {
 
 func main() {
 	Tools.Init("authdata.json")
-	Tools.NewUser("Guest", "", 10)
+	err := Tools.NewUser("Guest", "Гость", "", 10)
+	if err != nil{
+		println("[Main Add Guest] ", err.Error())
+		err = Tools.UpdateUser(Tools.User{Name: "Guest", PublicName: "Гость", Password: "", Access: 10, Active: false})
+		if err != nil {
+			println("[Main Update Guest] ", err.Error())
+		}
+	}
+	println("[Main] Сохранение пользователе: ", Tools.SaveUsers("authdata.json"))
 	fs := http.FileServer(http.Dir("html"))
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", rootHandler)
