@@ -30,6 +30,7 @@ type TokenData struct {
 }
 
 var userList []User
+var DefaultUser = "Guest"
 
 func GetUser(name string) (User, error){
 	for _, u := range userList{
@@ -51,9 +52,17 @@ func UpdateUser(user User) error{
 }
 
 func NewUser(name, publicName, password string, access int) error{
+	if (len(password) < 8) && (name != DefaultUser){
+		return errors.New("Пароль слишком короткий")
+	}
 	_, err := GetUser(name)
 	if err == nil {
 		return errors.New("Пользователь [" + name + "] уже существует")
+	}
+	for _, u := range userList{
+		if (u.PublicName == publicName) || (u.Name == publicName){
+			return errors.New("Имя [" + publicName + "] занято другим пользователем")
+		}
 	}
 	userList = append(userList, User{name, publicName, password, access, false})
 	return nil

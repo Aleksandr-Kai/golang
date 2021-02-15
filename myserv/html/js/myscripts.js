@@ -39,34 +39,59 @@ function onPageLoaded() {
     //----------------------------------------------------------------------------------------------
     // Обработка кнопки логина
     $('#login-form').on('submit', function(e){
-        e.preventDefault();
-        var login = $('#inp-login').val();
-        var password = $('#inp-pass').val();
-        
-        if(login != '' && password != ''){
-            $.ajax({
-                url:"/login",
-                method:"POST",
-                data:{password:password, login:login},
-                success:function(res){
-                    //console.log(res)
-                    var obj = $.parseJSON(res);
-                    
-                    if(obj.success){
-                        if(obj.message != '') alert(obj.message);
-                        location.reload();
-                    }
-                    else{
-                        if(obj.message != '') alert(obj.message); else alert('Неверный логин или пароль')
-                    }
-                }
-            })
-        }
-        else{
-            alert('Нужно заполнить все поля');
-        }
-        
+        e.preventDefault(); 
+        Login($('#inp-login').val(), $('#inp-pass').val());      
     })
+}
+//----------------------------------------------------------------------------------------------
+function Login(login, password){
+    if(login != '' && password != ''){
+        $.ajax({
+            url:"/login",
+            method:"POST",
+            data:{password:password, login:login},
+            success:function(res){
+                //console.log(res)
+                var obj = $.parseJSON(res);
+                
+                if(obj.success){
+                    if(obj.message != '') alert(obj.message);
+                    location.reload();
+                }
+                else{
+                    if(obj.message != '') alert(obj.message); else alert('Неверный логин или пароль');
+                }
+            }
+        })
+    }
+    else{
+        alert('Нужно заполнить все поля');
+    }
+}
+
+function NewUser(login, password){
+    if(login != '' && password != ''){
+        $.ajax({
+            url:"/login",
+            method:"POST",
+            data:{password:password, login:login},
+            success:function(res){
+                //console.log(res)
+                var obj = $.parseJSON(res);
+                
+                if(obj.success){
+                    if(obj.message != '') alert(obj.message);
+                    location.reload();
+                }
+                else{
+                    if(obj.message != '') alert(obj.message); else alert('Неверный логин или пароль');
+                }
+            }
+        })
+    }
+    else{
+        alert('Нужно заполнить все поля');
+    }
 }
 //----------------------------------------------------------------------------------------------
 // Параметры FancyBox

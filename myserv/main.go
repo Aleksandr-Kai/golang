@@ -41,8 +41,137 @@ type LoginResponse struct {
 	UserName	string	`json:"user_name"`
 }
 
+func CheckSession(r *http.Request) (user Tools.User) {
+	session, err := r.Cookie("session_id")
+
+	if err != nil {
+		println("[CheckAccess] ", err.Error())
+		user, err = Tools.GetUser(Tools.DefaultUser)
+		if err != nil{
+			println("[CheckAccess] DefaultUser: ", err.Error())
+			user = Tools.User{Name: Tools.DefaultUser, PublicName: "Гость", Password: "", Access: 10, Active: true}
+		}
+	}else{
+		user, err = Tools.ParseToken(session.Value)
+		if err != nil {
+			println("[CheckAccess] ", err.Error())
+			user, err = Tools.GetUser(Tools.DefaultUser)
+			if err != nil{
+				println("[CheckAccess] DefaultUser", err.Error())
+				user = Tools.User{Name: Tools.DefaultUser, PublicName: "Гость", Password: "", Access: 10, Active: true}
+			}
+		}
+	}
+	return
+}
+
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	rnd.Template(w, http.StatusOK, []string{"html/templates/404.html"}, nil)
+	if r.Method == http.MethodGet {
+		user := CheckSession(r)
+
+		switch r.URL.Path {
+		//-------------------------------------------------------------------------------------------------
+		case "/":
+				fallthrough
+		//-------------------------------------------------------------------------------------------------
+		/*         /home         */
+		case "/home":{
+			get_content := r.URL.Query().Get("get_content")
+			switch get_content {
+			//=============================================================================================================
+			case "":{
+				tmpls := []string{"html/templates/home.html", "html/templates/templates.html"}
+				name := user.PublicName
+				if name == ""{
+					name = user.Name
+				}
+				prms := struct{UserName string; UserMenu interface{}}{name, GetUserMenu(user.Access)}
+				err := rnd.Template(w, http.StatusOK, tmpls, prms)
+				if err != nil{
+					println("[rootHandler] ", err.Error())
+				}
+			}
+			//=============================================================================================================
+			case "album-list":{
+				Albums := Tools.GetAlbums()
+				params := make([]TmplAlbum, len(Albums))
+
+				for i, album := range Albums {
+					if len(album.Images) == 0 {
+						continue
+					}
+					params[i].AlbumTitleComment = fmt.Sprintf(" %v фото ", len(album.Images))
+					params[i].AlbumTitle = album.Title
+					if album.Preview == "" {
+						params[i].AlbumImg = "img/no_images.png"
+					} else {
+						params[i].AlbumImg = "img?album=" + album.Path + "&name=" + album.Preview + "&size=s"
+					}
+					params[i].AlbumDescription = album.Description
+					params[i].AlbumPath = album.Path
+				}
+				tmpls := []string{"html/templates/album-list.html"}
+				err := rnd.Template(w, http.StatusOK, tmpls, params)
+				if err != nil{
+					fmt.Printf("%v\n", err)
+				}
+			}
+			//=============================================================================================================
+			case "config":{
+				err := rnd.Template(w, http.StatusOK, []string{"html/templates/config.html"}, nil)
+				if err != nil{
+					println("[homeHandler] ", err.Error())
+				}
+			}
+			//=============================================================================================================
+			default:
+				fmt.Fprintf(w, "Запрос не может быть обработан!")
+			}
+		}
+		/*         /home         */
+		//-------------------------------------------------------------------------------------------------
+		/*         default (404)         */
+		default:
+			rnd.Template(w, http.StatusOK, []string{"html/templates/404.html"}, nil)
+		}
+	}
+
+}
+
+func registerHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		rnd.Template(w, http.StatusOK, []string{"html/templates/sign_in.html", "html/templates/templates.html"}, nil)
+		return
+	}
+	if r.Method != http.MethodPost {
+		http.Redirect(w, r, "/home", http.StatusFound)
+		return
+	}
+	inputName := r.FormValue("name")
+	inputLogin := r.FormValue("login")
+	inputPassword := r.FormValue("password")
+
+	resp := LoginResponse{false, "Unknown error", ""}
+	if (inputName == "") || (inputLogin == "") || (inputPassword == ""){
+		fmt.Printf("[registerHandler] Не все поля заполнены: name:%v  login:%v  password:%v\n", inputName, inputLogin, inputPassword)
+		resp.Success = false
+		resp.Message = fmt.Sprintf("Не все поля заполнены: name:%v  login:%v  password:%v\n", inputName, inputLogin, inputPassword)
+	}else{
+		err := Tools.NewUser(inputLogin, inputName, inputPassword, 1)
+		if err != nil{
+			println("[registerHandler] Ошибка регистрации пользователя: ", err.Error())
+			resp.Success = false
+			resp.Message = err.Error()
+		}else{
+			Tools.SaveUsers("authdata.json")
+			resp.Success = true
+			resp.Message = "Добро пожаловать!"
+			resp.UserName = inputName
+		}
+	}
+
+	answer, _ := json.Marshal(resp)
+	w.Write(answer)
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,6 +179,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/home", http.StatusFound)
 		return
 	}
+
 	inputLogin := r.FormValue("login")
 	inputPassword := r.FormValue("password")
 
@@ -74,12 +204,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	answer, _ := json.Marshal(resp)
 	w.Write(answer)
-	//http.Redirect(w, r, "/home", http.StatusFound)
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := r.Cookie("session_id")
-	if err != http.ErrNoCookie{
+	if err == nil{
 		//fmt.Println("[logoutHandler] Куки получено")
 		session.Expires = time.Now().AddDate(0, 0, -1)
 		user, err := Tools.ParseToken(session.Value)
@@ -88,6 +217,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 		}else{
 			Tools.Logout(user.Name)
 			fmt.Println("[logoutHandler] Выход выполнен")
+			Tools.Login(Tools.DefaultUser, "")
 		}
 		session.Value = ""
 		http.SetCookie(w, session)
@@ -117,119 +247,9 @@ func GetUserMenu(lvl int) template.HTML{
 		return mConfig + mLine + mLogout
 	}
 	case 1:
-		return mLogout
+		return mConfig + mLine + mLogout
 	default:
 		return mLogin
-	}
-
-}
-
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	param := r.URL.Query().Get("get_content")
-
-	switch param {
-	case "":{
-		session, err := r.Cookie("session_id")
-		var user Tools.User
-
-		if err != nil {
-			println("[homeHandler] ", err.Error())
-			user, err = Tools.GetUser("Guest")
-			if err != nil{
-				println("[homeHandler] ", err.Error())
-				user = Tools.User{Name: "Guest", PublicName: "Гость", Password: "", Access: 10, Active: true}
-			}
-		}else{
-			user, err = Tools.ParseToken(session.Value)
-			if err != nil {
-				println("[homeHandler] ", err.Error())
-				user, err = Tools.GetUser("Guest")
-				if err != nil{
-					println("[homeHandler] ", err.Error())
-					user = Tools.User{Name: "Guest", PublicName: "Гость", Password: "", Access: 10, Active: true}
-				}
-			}
-		}
-		fmt.Printf("[homeHandler] Запрос от пользователя: %v\n", user)
-		/*
-		tmplFuncs := template.FuncMap{"UserMenu" : UserMenu}
-		tmpl, err := template.New("").Funcs(tmplFuncs).ParseFiles("html/templates/home.html", "html/templates/templates.html")
-		if err == nil {
-			err = tmpl.ExecuteTemplate(w, "home.html", struct{UserName string}{user.Name})
-			if err != nil {
-				fmt.Println("[homeHandler] ", err.Error())
-			}
-			return
-		}
-		fmt.Println("[homeHandler] ", err.Error())*/
-
-		tmpls := []string{"html/templates/home.html", "html/templates/templates.html"}
-		name := user.PublicName
-		if name == ""{
-			name = user.Name
-		}
-		prms := struct{UserName string; UserMenu interface{}}{name, GetUserMenu(user.Access)}
-		err = rnd.Template(w, http.StatusOK, tmpls, prms)
-		if err != nil{
-			println("[homeHandler] ", err.Error())
-		}
-	}
-	case "album-list":{
-		Albums := Tools.GetAlbums()
-		params := make([]TmplAlbum, len(Albums))
-
-		for i, album := range Albums {
-			if len(album.Images) == 0 {
-				continue
-			}
-			params[i].AlbumTitleComment = fmt.Sprintf(" %v фото ", len(album.Images))
-			params[i].AlbumTitle = album.Title
-			//fmt.Printf("img/%v/%v\n", album.Path, album.Preview)
-			if album.Preview == "" {
-				params[i].AlbumImg = "img/no_images.png"
-			} else {
-				params[i].AlbumImg = "img?album=" + album.Path + "&name=" + album.Preview + "&size=s"
-			}
-			params[i].AlbumDescription = album.Description
-			params[i].AlbumPath = album.Path
-		}
-		tmpls := []string{"html/templates/album-list.html"}
-		err := rnd.Template(w, http.StatusOK, tmpls, params)
-		if err != nil{
-			fmt.Printf("%v\n", err)
-		}
-	}
-	case "config":{
-		/*
-		session, err := r.Cookie("session_id")
-		if err != nil {
-			fmt.Println("[homeHandler] ", err.Error())
-			rnd.Template(w, http.StatusOK, []string{"html/templates/null.html"}, nil)
-			return
-		}
-		if session.Value != "AKai" {
-			fmt.Println("[homeHandler] В доступе отказано")
-			rnd.Template(w, http.StatusOK, []string{"html/templates/null.html"}, nil)
-			return
-		}*/
-		err := rnd.Template(w, http.StatusOK, []string{"html/templates/config.html"}, nil)
-		if err != nil{
-			println("[homeHandler] ", err.Error())
-		}
-		/*
-		var modal template.HTML
-		content, err := ioutil.ReadFile("html/templates/config.html")
-		if err != nil {
-			log.Fatal(err)
-		}else{
-			modal = template.HTML(content)
-		}*/
-	}
-	case "header":{
-
-	}
-	default:
-		fmt.Fprintf(w, "Запрос не может быть обработан!")
 	}
 
 }
@@ -303,12 +323,14 @@ func init() {
 	rnd = renderer.New()
 }
 
+
+
 func main() {
 	Tools.Init("authdata.json")
-	err := Tools.NewUser("Guest", "Гость", "", 10)
+	err := Tools.NewUser(Tools.DefaultUser, "Гость", "", 10)
 	if err != nil{
 		println("[Main Add Guest] ", err.Error())
-		err = Tools.UpdateUser(Tools.User{Name: "Guest", PublicName: "Гость", Password: "", Access: 10, Active: false})
+		err = Tools.UpdateUser(Tools.User{Name: Tools.DefaultUser, PublicName: "Гость", Password: "", Access: 10, Active: false})
 		if err != nil {
 			println("[Main Update Guest] ", err.Error())
 		}
@@ -318,8 +340,8 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", rootHandler)
 	mux.HandleFunc("/login", loginHandler)
+	mux.HandleFunc("/sign-in", registerHandler)
 	mux.HandleFunc("/logout", logoutHandler)
-	mux.HandleFunc("/home", homeHandler)
 	mux.HandleFunc("/gallery", galleryHandler)
 	mux.HandleFunc("/img", imgHandler)
 	mux.Handle("/img/", fs)
