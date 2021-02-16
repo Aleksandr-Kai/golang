@@ -5,41 +5,44 @@
               <h5 class="modal-title">Настройки</h5>
               <button type="button" class="btn-close bg-light" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="height: 20vw;">
                 <ul class="nav nav-tabs" id="myTab" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Профиль</button>
+                        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Разное</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Админ</button>
+                        <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Профиль</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">Contact</button>
+                        <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">Админ</button>
                     </li>
                 </ul>
                 <div class="tab-content" id="myTabContent">
                     <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                        
+                    </div>
+                    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab" style="height: 100%;">
                         <div class="login-block shadow">
-                            <form>
+                            <form id="user-update-form">
                                 <hr class="hr-xs">
                                 <div class="form-group">
                                     <div class="input-group">
                                         <span class="input-group-addon"><i class="fa fa-user ti-user"></i></span>
-                                        <input type="text" class="form-control" placeholder="Отображаемое имя" id="public-name">
+                                        <input type="text" class="form-control" placeholder="Отображаемое имя" id="conf-public-name">
                                     </div>
                                 </div>
                                 <hr class="hr-xs">
                                 <div class="form-group">
                                     <div class="input-group">
                                         <span class="input-group-addon"><i class="fa fa-lock ti-unlock"></i></span>
-                                        <input type="password" class="form-control" placeholder="Текущий пароль" id="old-password" autocomplete="new-password">
+                                        <input type="password" class="form-control" placeholder="Текущий пароль" id="conf-old-password" autocomplete="new-password">
                                     </div>
                                 </div>
                                 <hr class="hr-xs">
                                 <div class="form-group">
                                     <div class="input-group">
                                         <span class="input-group-addon"><i class="fa fa-lock ti-unlock"></i></span>
-                                        <input type="password" class="form-control" placeholder="Новый суперпароль" id="new-password">
+                                        <input type="password" class="form-control" placeholder="Новый суперпароль" id="conf-new-password">
                                     </div>
                                 </div>
                                 <hr class="hr-xs">
@@ -48,8 +51,9 @@
                             </form>
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">...</div>
-                    <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">...</div>
+                    <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+
+                    </div>
                 </div>
                   
                 
@@ -59,3 +63,25 @@
       
     </div>
 </div>
+<script>
+    $('#user-update-form').on('submit', function(e){
+        e.preventDefault(); 
+        var oldpass = $('#conf-old-password').val();
+        if(oldpass == '') 
+        {
+            alert('Введите текущий пароль');
+            return
+        }
+        var name = $('#conf-public-name').val();
+        var newpass = $('#conf-new-password').val();
+        $.ajax({
+            url:"/config",
+            method:"POST",
+            data:{newname:name, newpass:newpass, oldpass:oldpass},
+            success:function(res){
+                var obj = $.parseJSON(res);
+                alert(obj.message);
+            }
+        })
+    })
+</script>

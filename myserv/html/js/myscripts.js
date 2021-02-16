@@ -69,30 +69,6 @@ function Login(login, password){
     }
 }
 
-function NewUser(login, password){
-    if(login != '' && password != ''){
-        $.ajax({
-            url:"/login",
-            method:"POST",
-            data:{password:password, login:login},
-            success:function(res){
-                //console.log(res)
-                var obj = $.parseJSON(res);
-                
-                if(obj.success){
-                    if(obj.message != '') alert(obj.message);
-                    location.reload();
-                }
-                else{
-                    if(obj.message != '') alert(obj.message); else alert('Неверный логин или пароль');
-                }
-            }
-        })
-    }
-    else{
-        alert('Нужно заполнить все поля');
-    }
-}
 //----------------------------------------------------------------------------------------------
 // Параметры FancyBox
 function UpdateFancyBox(){

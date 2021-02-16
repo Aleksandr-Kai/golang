@@ -41,7 +41,7 @@ type LoginResponse struct {
 	UserName	string	`json:"user_name"`
 }
 
-func CheckSession(r *http.Request) (user Tools.User) {
+func GetSession(r *http.Request) (user Tools.User) {
 	session, err := r.Cookie("session_id")
 
 	if err != nil {
@@ -66,76 +66,132 @@ func CheckSession(r *http.Request) (user Tools.User) {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
+	user := GetSession(r)
 	if r.Method == http.MethodGet {
-		user := CheckSession(r)
-
 		switch r.URL.Path {
 		//-------------------------------------------------------------------------------------------------
 		case "/":
-				fallthrough
+			fallthrough
 		//-------------------------------------------------------------------------------------------------
 		/*         /home         */
-		case "/home":{
-			get_content := r.URL.Query().Get("get_content")
-			switch get_content {
-			//=============================================================================================================
-			case "":{
-				tmpls := []string{"html/templates/home.html", "html/templates/templates.html"}
-				name := user.PublicName
-				if name == ""{
-					name = user.Name
-				}
-				prms := struct{UserName string; UserMenu interface{}}{name, GetUserMenu(user.Access)}
-				err := rnd.Template(w, http.StatusOK, tmpls, prms)
-				if err != nil{
-					println("[rootHandler] ", err.Error())
-				}
-			}
-			//=============================================================================================================
-			case "album-list":{
-				Albums := Tools.GetAlbums()
-				params := make([]TmplAlbum, len(Albums))
+		case "/home":
+			{
+				get_content := r.URL.Query().Get("get_content")
+				switch get_content {
+				//=============================================================================================================
+				case "":
+					{
+						tmpls := []string{"html/templates/home.html", "html/templates/templates.html"}
+						name := user.PublicName
+						if name == "" {
+							name = user.Name
+						}
+						prms := struct {
+							UserName string;
+							UserMenu interface{}
+						}{name, GetUserMenu(user.Access)}
+						err := rnd.Template(w, http.StatusOK, tmpls, prms)
+						if err != nil {
+							println("[rootHandler] ", err.Error())
+						}
+					}
+				//=============================================================================================================
+				case "album-list":
+					{
+						Albums := Tools.GetAlbums()
+						params := make([]TmplAlbum, len(Albums))
 
-				for i, album := range Albums {
-					if len(album.Images) == 0 {
-						continue
+						for i, album := range Albums {
+							if len(album.Images) == 0 {
+								continue
+							}
+							params[i].AlbumTitleComment = fmt.Sprintf(" %v фото ", len(album.Images))
+							params[i].AlbumTitle = album.Title
+							if album.Preview == "" {
+								params[i].AlbumImg = "img/no_images.png"
+							} else {
+								params[i].AlbumImg = "img?album=" + album.Path + "&name=" + album.Preview + "&size=s"
+							}
+							params[i].AlbumDescription = album.Description
+							params[i].AlbumPath = album.Path
+						}
+						tmpls := []string{"html/templates/album-list.html"}
+						err := rnd.Template(w, http.StatusOK, tmpls, params)
+						if err != nil {
+							fmt.Printf("%v\n", err)
+						}
 					}
-					params[i].AlbumTitleComment = fmt.Sprintf(" %v фото ", len(album.Images))
-					params[i].AlbumTitle = album.Title
-					if album.Preview == "" {
-						params[i].AlbumImg = "img/no_images.png"
-					} else {
-						params[i].AlbumImg = "img?album=" + album.Path + "&name=" + album.Preview + "&size=s"
+				//=============================================================================================================
+				case "config":
+					{
+						if user.Name == Tools.DefaultUser {
+							fmt.Println("[rootHandler] Сессия не действительня. redirect")
+							http.Redirect(w, r, "/home", http.StatusForbidden)
+							return
+						}
+						fmt.Println("[rootHandler] Выдача формы настроек")
+						err := rnd.Template(w, http.StatusOK, []string{"html/templates/config.html"}, nil)
+						if err != nil {
+							println("[rootHandler]", err.Error())
+						}
 					}
-					params[i].AlbumDescription = album.Description
-					params[i].AlbumPath = album.Path
-				}
-				tmpls := []string{"html/templates/album-list.html"}
-				err := rnd.Template(w, http.StatusOK, tmpls, params)
-				if err != nil{
-					fmt.Printf("%v\n", err)
+				//=============================================================================================================
+				default:
+					fmt.Fprintf(w, "Запрос не может быть обработан!")
 				}
 			}
-			//=============================================================================================================
-			case "config":{
-				err := rnd.Template(w, http.StatusOK, []string{"html/templates/config.html"}, nil)
-				if err != nil{
-					println("[homeHandler] ", err.Error())
-				}
-			}
-			//=============================================================================================================
-			default:
-				fmt.Fprintf(w, "Запрос не может быть обработан!")
-			}
-		}
 		/*         /home         */
 		//-------------------------------------------------------------------------------------------------
 		/*         default (404)         */
 		default:
 			rnd.Template(w, http.StatusOK, []string{"html/templates/404.html"}, nil)
 		}
-	}
+	}else if r.Method == http.MethodPost{
+		switch r.URL.Path {
+		case "/config":{
+			fmt.Printf("[rootHandler] Обработка новых данных пользователя:\n   %v\n   %v\n", user, r.PostForm)
+			inputName := r.FormValue("newname")
+			inputOldPass := r.FormValue("oldpass")
+			inputNewPass := r.FormValue("newpass")
+			fmt.Printf("[rootHandler]\n   Новое имя: %v\n   Новый пароль: %v\n   Старый пароль: %v\n", inputName, inputNewPass, inputNewPass)
 
+			resp := LoginResponse{false, "Неизвестная ошибка", ""}
+			if user.Name != Tools.DefaultUser {
+				if user.Password != inputOldPass {
+					resp.Message = "Не верный пароль!"
+					fmt.Println("[rootHandler] Не верный пароль!")
+				} else {
+					upd := (inputNewPass != "") || (inputName != "")
+					if upd && inputNewPass != "" {
+						if len(inputNewPass) < 8 {
+							resp.Message = "Новый пароль слишком короткий"
+							fmt.Println("[rootHandler] Новый пароль слишком короткий")
+							upd = false
+						} else {
+							fmt.Println("[rootHandler] Пароль изменен")
+							user.Password = inputNewPass
+						}
+					}
+					if upd && (inputName != "") {
+						fmt.Println("[rootHandler] Имя пользователя изменено")
+						user.PublicName = inputName
+					}
+					if upd {
+						Tools.UpdateUser(user)
+						Tools.SaveUsers("authdata.json")
+						resp.Success = true
+						resp.Message = "Данные пользователя обновлены"
+						fmt.Println("[rootHandler] Данные пользователя обновлены")
+					}
+				}
+			}
+
+			answer, _ := json.Marshal(resp)
+			fmt.Printf("[rootHandler] Ответ браузеру: %v\n", string(answer))
+			w.Write(answer)
+		}
+		}
+	}
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
@@ -182,7 +238,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	inputLogin := r.FormValue("login")
 	inputPassword := r.FormValue("password")
-
+	fmt.Printf("[loginHandler] Обработка новых данных пользователя: %v\n", r.PostForm)
 	token, err := Tools.Login(inputLogin, inputPassword)
 	resp := LoginResponse{false, "Unknown error", "Гость"}
 	if err != nil {
