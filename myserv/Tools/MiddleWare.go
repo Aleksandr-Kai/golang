@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	"github.com/jackc/pgx"
+	//"github.com/jackc/pgx"
 )
 
 func MWAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sql.open
+		//sql.open
 		fmt.Println("adminAuthMiddleware", r.URL.Path)
 		_, err := r.Cookie("session_id")
 		// учебный пример! это не проверка авторизации!

@@ -1,12 +1,11 @@
 package Tools
 
 import (
+	"database/sql"
 	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"strings"
 	"time"
 )
@@ -29,83 +28,79 @@ type TokenData struct {
 	Expiration	time.Time	`json:"exp"`
 }
 
-var userList []User
 var DefaultUser = "Guest"
+var db *sql.DB
 
 func GetUser(name string) (User, error){
-	for _, u := range userList{
-		if u.Name == name{
-			return u, nil
-		}
+	request := fmt.Sprintf("select * from users where login = '%v'", name)
+	rows, err := db.Query(request)
+	if err != nil{
+		println(err.Error())
+		return User{}, err
 	}
-	return User{}, errors.New("Пользователь [" + name + "] не найден")
+	defer rows.Close()
+	post := &User{}
+	rows.Next()
+	err = rows.Scan(&post.Name, &post.PublicName, &post.Password, &post.Access, &post.Active)
+	if err != nil{
+		println(err.Error())
+	}
+	return *post, err
 }
 
 func UpdateUser(user User) error{
-	for i, u := range userList{
-		if u.Name == user.Name{
-			userList[i] = user
-			return nil
-		}
+	request := "update users set "
+	if user.PublicName != ""{
+		request += fmt.Sprintf("public_name='%v', ", user.PublicName)
 	}
-	return errors.New("Пользователь [" + user.Name + "] не найден")
+	if user.Password != ""{
+		request += fmt.Sprintf("password='%v', ", user.Password)
+	}
+	request += fmt.Sprintf("active = %v  where login = '%v'", user.Active, user.Name)
+	_, err := db.Query(request)
+	if err != nil{
+		println("[SQL] Update user: ", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func NewUser(name, publicName, password string, access int) error{
-	if (len(password) < 8) && (name != DefaultUser){
-		return errors.New("Пароль слишком короткий")
+	if publicName == ""{
+		publicName = name
 	}
-	_, err := GetUser(name)
-	if err == nil {
-		return errors.New("Пользователь [" + name + "] уже существует")
+	request := fmt.Sprintf("insert into users values ('%v', '%v', '%v', %v, 0);", name, publicName, password, access)
+	_, err := db.Query(request)
+	if err != nil{
+		println("[SQL] Add user: ", err.Error())
+		return err
 	}
-	for _, u := range userList{
-		if (u.PublicName == publicName) || (u.Name == publicName){
-			return errors.New("Имя [" + publicName + "] занято другим пользователем")
-		}
-	}
-	userList = append(userList, User{name, publicName, password, access, false})
 	return nil
 }
 
 func RemoveUser(name string) {
-	for i, u := range userList{
-		if u.Name == name{
-			copy(userList[i:], userList[i+1:])
-			userList[len(userList)-1] = User{}
-			userList = userList[:len(userList)-1]
-			return
-		}
-	}
-}
-
-func Init(path string){
-	userList = make([]User, 0, 10)
-	txt, err := ioutil.ReadFile(path)
-	if err != nil {
-		println("[Auth Init] ", err.Error())
+	request := fmt.Sprintf("delete from users where login='%v';", name)
+	_, err := db.Query(request)
+	if err != nil{
+		println("[SQL] Add user: ", err.Error())
 		return
 	}
-	err = json.Unmarshal(txt, &userList)
-	if err != nil {
-		println("[Auth Init] ", err.Error())
-		return
-	}
-	fmt.Printf("[Auth Init] %v\n", userList)
+	fmt.Println("[SQL] User removed: ", name)
 }
 
-func SaveUsers(path string) bool {
-	txt, err := json.Marshal(userList)
-	if err != nil {
-		fmt.Printf("[SaveUsers] %v\n", err.Error())
-		return false
+func Init(){
+	dsn := "root@tcp(localhost:3306)/akaiphoto?"
+	dsn += "&charset=utf8"
+	dsn += "&interpolateParams=true"
+	var err error
+	db, err = sql.Open("mysql", dsn)
+	db.SetConnMaxIdleTime(10)
+	err = db.Ping()
+	if err != nil{
+		println("[SQL] Open DB: ", err.Error())
+		return
 	}
-	err = ioutil.WriteFile(path, txt, os.ModePerm)
-	if err != nil {
-		fmt.Printf("[SaveUsers] %v\n", err.Error())
-		return false
-	}
-	return true
 }
 
 func Login(name, password string) (token string, err error){

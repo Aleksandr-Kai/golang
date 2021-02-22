@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aleksandr-kai/golang/myserv/Tools"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/thedevsaddam/renderer"
 	"html/template"
 	"io/ioutil"
@@ -149,45 +150,47 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	}else if r.Method == http.MethodPost{
 		switch r.URL.Path {
 		case "/config":{
-			fmt.Printf("[rootHandler] Обработка новых данных пользователя:\n   %v\n   %v\n", user, r.PostForm)
+			//fmt.Printf("[rootHandler] Обработка новых данных пользователя:\n   %v\n   %v\n", user, r.PostForm)
 			inputName := r.FormValue("newname")
 			inputOldPass := r.FormValue("oldpass")
 			inputNewPass := r.FormValue("newpass")
-			fmt.Printf("[rootHandler]\n   Новое имя: %v\n   Новый пароль: %v\n   Старый пароль: %v\n", inputName, inputNewPass, inputNewPass)
+			//fmt.Printf("[rootHandler]\n   Новое имя: %v\n   Новый пароль: %v\n   Старый пароль: %v\n", inputName, inputNewPass, inputNewPass)
 
 			resp := LoginResponse{false, "Неизвестная ошибка", ""}
 			if user.Name != Tools.DefaultUser {
-				if user.Password != inputOldPass {
-					resp.Message = "Не верный пароль!"
-					fmt.Println("[rootHandler] Не верный пароль!")
-				} else {
-					upd := (inputNewPass != "") || (inputName != "")
-					if upd && inputNewPass != "" {
-						if len(inputNewPass) < 8 {
-							resp.Message = "Новый пароль слишком короткий"
-							fmt.Println("[rootHandler] Новый пароль слишком короткий")
-							upd = false
-						} else {
-							fmt.Println("[rootHandler] Пароль изменен")
-							user.Password = inputNewPass
+				u, err := Tools.GetUser(user.Name)
+				if err == nil{
+					if u.Password != inputOldPass {
+						resp.Message = "Не верный пароль!"
+						//fmt.Println("[rootHandler] Не верный пароль!")
+					} else {
+						upd := (inputNewPass != "") || (inputName != "")
+						if upd && inputNewPass != "" {
+							if len(inputNewPass) < 8 {
+								resp.Message = "Новый пароль слишком короткий"
+								//fmt.Println("[rootHandler] Новый пароль слишком короткий")
+								upd = false
+							} else {
+								//fmt.Println("[rootHandler] Пароль изменен")
+								user.Password = inputNewPass
+							}
 						}
-					}
-					if upd && (inputName != "") {
-						fmt.Println("[rootHandler] Имя пользователя изменено")
-						user.PublicName = inputName
-					}
-					if upd {
-						Tools.UpdateUser(user)
-						Tools.SaveUsers("authdata.json")
-						resp.Success = true
-						resp.Message = "Данные пользователя обновлены"
-						fmt.Println("[rootHandler] Данные пользователя обновлены")
+						if upd && (inputName != "") {
+							//fmt.Println("[rootHandler] Имя пользователя изменено")
+							user.PublicName = inputName
+						}
+						if upd {
+							Tools.UpdateUser(user)
+							resp.Success = true
+							resp.Message = "Данные пользователя обновлены"
+							//fmt.Println("[rootHandler] Данные пользователя обновлены")
+						}
 					}
 				}
 			}
 
 			answer, _ := json.Marshal(resp)
-			fmt.Printf("[rootHandler] Ответ браузеру: %v\n", string(answer))
+			//fmt.Printf("[rootHandler] Ответ браузеру: %v\n", string(answer))
 			w.Write(answer)
 		}
 		}
@@ -219,7 +222,6 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 			resp.Success = false
 			resp.Message = err.Error()
 		}else{
-			Tools.SaveUsers("authdata.json")
 			resp.Success = true
 			resp.Message = "Добро пожаловать!"
 			resp.UserName = inputName
@@ -379,19 +381,8 @@ func init() {
 	rnd = renderer.New()
 }
 
-
-
 func main() {
-	Tools.Init("authdata.json")
-	err := Tools.NewUser(Tools.DefaultUser, "Гость", "", 10)
-	if err != nil{
-		println("[Main Add Guest] ", err.Error())
-		err = Tools.UpdateUser(Tools.User{Name: Tools.DefaultUser, PublicName: "Гость", Password: "", Access: 10, Active: false})
-		if err != nil {
-			println("[Main Update Guest] ", err.Error())
-		}
-	}
-	println("[Main] Сохранение пользователе: ", Tools.SaveUsers("authdata.json"))
+	Tools.Init()
 	fs := http.FileServer(http.Dir("html"))
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", rootHandler)
