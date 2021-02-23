@@ -1,7 +1,6 @@
 package Tools
 
 import (
-	"database/sql"
 	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
@@ -29,13 +28,12 @@ type TokenData struct {
 }
 
 var DefaultUser = "Guest"
-var db *sql.DB
 
 func GetUser(name string) (User, error){
 	request := fmt.Sprintf("select * from users where login = '%v'", name)
 	rows, err := db.Query(request)
 	if err != nil{
-		println(err.Error())
+		fmt.Println(err.Error())
 		return User{}, err
 	}
 	defer rows.Close()
@@ -43,7 +41,7 @@ func GetUser(name string) (User, error){
 	rows.Next()
 	err = rows.Scan(&post.Name, &post.PublicName, &post.Password, &post.Access, &post.Active)
 	if err != nil{
-		println(err.Error())
+		fmt.Println(err.Error())
 	}
 	return *post, err
 }
@@ -59,7 +57,7 @@ func UpdateUser(user User) error{
 	request += fmt.Sprintf("active = %v  where login = '%v'", user.Active, user.Name)
 	_, err := db.Query(request)
 	if err != nil{
-		println("[SQL] Update user: ", err.Error())
+		fmt.Println("[SQL] Update user: ", err.Error())
 		return err
 	}
 
@@ -73,7 +71,7 @@ func NewUser(name, publicName, password string, access int) error{
 	request := fmt.Sprintf("insert into users values ('%v', '%v', '%v', %v, 0);", name, publicName, password, access)
 	_, err := db.Query(request)
 	if err != nil{
-		println("[SQL] Add user: ", err.Error())
+		fmt.Println("[SQL] Add user: ", err.Error())
 		return err
 	}
 	return nil
@@ -83,24 +81,10 @@ func RemoveUser(name string) {
 	request := fmt.Sprintf("delete from users where login='%v';", name)
 	_, err := db.Query(request)
 	if err != nil{
-		println("[SQL] Add user: ", err.Error())
+		fmt.Println("[SQL] Add user: ", err.Error())
 		return
 	}
 	fmt.Println("[SQL] User removed: ", name)
-}
-
-func Init(){
-	dsn := "root@tcp(localhost:3306)/akaiphoto?"
-	dsn += "&charset=utf8"
-	dsn += "&interpolateParams=true"
-	var err error
-	db, err = sql.Open("mysql", dsn)
-	db.SetConnMaxIdleTime(10)
-	err = db.Ping()
-	if err != nil{
-		println("[SQL] Open DB: ", err.Error())
-		return
-	}
 }
 
 func Login(name, password string) (token string, err error){
@@ -119,13 +103,13 @@ func Login(name, password string) (token string, err error){
 func Logout(name string){
 	user, err := GetUser(name)
 	if err != nil {
-		println("[Logout] ", err.Error())
+		fmt.Println("[Logout] ", err.Error())
 		return
 	}
 	user.Active = false
 	err = UpdateUser(user)
 	if err != nil {
-		println("[Logout] ", err.Error())
+		fmt.Println("[Logout] ", err.Error())
 	}
 }
 
@@ -140,7 +124,7 @@ func GetToken(user User, expiration time.Time) string{
 func ParseToken(token string) (User, error){
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
-		return User{}, errors.New("[ParseToken] Не правильный формат токена")
+		return User{}, errors.New("Не правильный формат токена")
 	}
 	dec, err := b64.StdEncoding.DecodeString(parts[2])
 	if err != nil {
@@ -161,11 +145,11 @@ func ParseToken(token string) (User, error){
 		return User{}, err
 	}
 	if tds.Expiration.Before(time.Now()) {
-		return User{}, errors.New("[ParseToken] Токен просрочен")
+		return User{}, errors.New("Токен просрочен")
 	}
 	usr, err := GetUser(tds.Subject)
 	if err != nil {
-		return User{}, errors.New("[ParseToken] Токен не соответствует ни одному пользователю")
+		return User{}, errors.New("Токен не соответствует ни одному пользователю: " + tds.Subject)
 	}
 	if !usr.Active {
 		fmt.Printf("[ParseToken] %v\n", usr)

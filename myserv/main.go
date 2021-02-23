@@ -42,23 +42,23 @@ type LoginResponse struct {
 	UserName	string	`json:"user_name"`
 }
 
-func GetSession(r *http.Request) (user Tools.User) {
+func GetSession(r *http.Request) (user Tools.User, err error) {
 	session, err := r.Cookie("session_id")
 
 	if err != nil {
-		println("[CheckAccess] ", err.Error())
+		fmt.Println("[CheckAccess] ", err.Error())
 		user, err = Tools.GetUser(Tools.DefaultUser)
 		if err != nil{
-			println("[CheckAccess] DefaultUser: ", err.Error())
+			fmt.Println("[CheckAccess] DefaultUser: ", err.Error())
 			user = Tools.User{Name: Tools.DefaultUser, PublicName: "Гость", Password: "", Access: 10, Active: true}
 		}
 	}else{
 		user, err = Tools.ParseToken(session.Value)
 		if err != nil {
-			println("[CheckAccess] ", err.Error())
+			fmt.Println("[CheckAccess] ", err.Error())
 			user, err = Tools.GetUser(Tools.DefaultUser)
 			if err != nil{
-				println("[CheckAccess] DefaultUser", err.Error())
+				fmt.Println("[CheckAccess] DefaultUser", err.Error())
 				user = Tools.User{Name: Tools.DefaultUser, PublicName: "Гость", Password: "", Access: 10, Active: true}
 			}
 		}
@@ -67,7 +67,16 @@ func GetSession(r *http.Request) (user Tools.User) {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	user := GetSession(r)
+	user, err := GetSession(r)
+	if err != nil{
+		coockie := http.Cookie{
+			Name: "session_id",
+			Value: "",
+			Expires: time.Now().AddDate(0, 0, -1),
+			Path: "/",
+		}
+		http.SetCookie(w, &coockie)
+	}
 	if r.Method == http.MethodGet {
 		switch r.URL.Path {
 		//-------------------------------------------------------------------------------------------------
@@ -93,7 +102,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 						}{name, GetUserMenu(user.Access)}
 						err := rnd.Template(w, http.StatusOK, tmpls, prms)
 						if err != nil {
-							println("[rootHandler] ", err.Error())
+							fmt.Println("[rootHandler] ", err.Error())
 						}
 					}
 				//=============================================================================================================
@@ -133,7 +142,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 						fmt.Println("[rootHandler] Выдача формы настроек")
 						err := rnd.Template(w, http.StatusOK, []string{"html/templates/config.html"}, nil)
 						if err != nil {
-							println("[rootHandler]", err.Error())
+							fmt.Println("[rootHandler]", err.Error())
 						}
 					}
 				//=============================================================================================================
@@ -218,7 +227,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}else{
 		err := Tools.NewUser(inputLogin, inputName, inputPassword, 1)
 		if err != nil{
-			println("[registerHandler] Ошибка регистрации пользователя: ", err.Error())
+			fmt.Println("[registerHandler] Ошибка регистрации пользователя: ", err.Error())
 			resp.Success = false
 			resp.Message = err.Error()
 		}else{
@@ -244,7 +253,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := Tools.Login(inputLogin, inputPassword)
 	resp := LoginResponse{false, "Unknown error", "Гость"}
 	if err != nil {
-		println("[loginHandler] Ошибка получения токена: ", err.Error())
+		fmt.Println("[loginHandler] Ошибка получения токена: ", err.Error())
 		resp.Success = false
 		resp.Message = err.Error()
 	}else{
@@ -271,7 +280,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 		session.Expires = time.Now().AddDate(0, 0, -1)
 		user, err := Tools.ParseToken(session.Value)
 		if err != nil{
-			println("[logoutHandler] ", err.Error())
+			fmt.Println("[logoutHandler] ", err.Error())
 		}else{
 			Tools.Logout(user.Name)
 			fmt.Println("[logoutHandler] Выход выполнен")
@@ -382,7 +391,8 @@ func init() {
 }
 
 func main() {
-	Tools.Init()
+	Tools.DBOpen()
+	Tools.DBInit()
 	fs := http.FileServer(http.Dir("html"))
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", rootHandler)
@@ -395,6 +405,8 @@ func main() {
 	mux.Handle("/css/", fs)
 	mux.Handle("/js/", fs)
 	port := "80"
+	time.Sleep(10 * time.Millisecond)
 	fmt.Println("starting server at 127.0.0.1:" + port)
 	http.ListenAndServe(":" + port, mux)
+
 }
