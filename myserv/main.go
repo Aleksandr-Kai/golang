@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aleksandr-kai/golang/myserv/Tools"
-	_ "github.com/go-sql-driver/mysql"
+	//_ "github.com/go-sql-driver/mysql"
 	"github.com/thedevsaddam/renderer"
 	"html/template"
 	"io/ioutil"

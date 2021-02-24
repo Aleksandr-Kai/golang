@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -141,4 +143,10 @@ func GetFilesList(path string) []string{
 		}
 	}
 	return res
+}
+
+func Log(msg string){
+	pc, _, _, _ := runtime.Caller(1)
+	funcName := runtime.FuncForPC(pc).Name()
+	log.Printf("[%v] %v\n", funcName, msg)
 }

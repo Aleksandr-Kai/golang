@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 )
@@ -30,6 +31,11 @@ type TokenData struct {
 var DefaultUser = "Guest"
 
 func GetUser(name string) (User, error){
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("[GetUser] panic occurred:", err)
+		}
+	}()
 	request := fmt.Sprintf("select * from users where login = '%v'", name)
 	rows, err := db.Query(request)
 	if err != nil{
@@ -47,6 +53,11 @@ func GetUser(name string) (User, error){
 }
 
 func UpdateUser(user User) error{
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("[UpdateUser] panic occurred:", err)
+		}
+	}()
 	request := "update users set "
 	if user.PublicName != ""{
 		request += fmt.Sprintf("public_name='%v', ", user.PublicName)
@@ -65,6 +76,11 @@ func UpdateUser(user User) error{
 }
 
 func NewUser(name, publicName, password string, access int) error{
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("[NewUser] panic occurred:", err)
+		}
+	}()
 	if publicName == ""{
 		publicName = name
 	}
