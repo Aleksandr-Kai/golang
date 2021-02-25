@@ -46,19 +46,19 @@ func GetSession(r *http.Request) (user Tools.User, err error) {
 	session, err := r.Cookie("session_id")
 
 	if err != nil {
-		fmt.Println("[CheckAccess] ", err.Error())
+		Tools.Log(err.Error())
 		user, err = Tools.GetUser(Tools.DefaultUser)
 		if err != nil{
-			fmt.Println("[CheckAccess] DefaultUser: ", err.Error())
+			Tools.Log("DefaultUser", err)
 			user = Tools.User{Name: Tools.DefaultUser, PublicName: "Гость", Password: "", Access: 10, Active: true}
 		}
 	}else{
 		user, err = Tools.ParseToken(session.Value)
 		if err != nil {
-			fmt.Println("[CheckAccess] ", err.Error())
+			Tools.Log(err.Error())
 			user, err = Tools.GetUser(Tools.DefaultUser)
 			if err != nil{
-				fmt.Println("[CheckAccess] DefaultUser", err.Error())
+				Tools.Log("DefaultUser", err)
 				user = Tools.User{Name: Tools.DefaultUser, PublicName: "Гость", Password: "", Access: 10, Active: true}
 			}
 		}
@@ -102,7 +102,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 						}{name, GetUserMenu(user.Access)}
 						err := rnd.Template(w, http.StatusOK, tmpls, prms)
 						if err != nil {
-							fmt.Println("[rootHandler] ", err.Error())
+							Tools.Log(err.Error())
 						}
 					}
 				//=============================================================================================================
@@ -128,21 +128,21 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 						tmpls := []string{"html/templates/album-list.html"}
 						err := rnd.Template(w, http.StatusOK, tmpls, params)
 						if err != nil {
-							fmt.Printf("%v\n", err)
+							Tools.Log(err.Error())
 						}
 					}
 				//=============================================================================================================
 				case "config":
 					{
 						if user.Name == Tools.DefaultUser {
-							fmt.Println("[rootHandler] Сессия не действительня. redirect")
+							Tools.Message("Сессия не действительня. redirect")
 							http.Redirect(w, r, "/home", http.StatusForbidden)
 							return
 						}
-						fmt.Println("[rootHandler] Выдача формы настроек")
+						Tools.Message("Выдача формы настроек")
 						err := rnd.Template(w, http.StatusOK, []string{"html/templates/config.html"}, nil)
 						if err != nil {
-							fmt.Println("[rootHandler]", err.Error())
+							Tools.Log(err.Error())
 						}
 					}
 				//=============================================================================================================
@@ -221,13 +221,13 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	resp := LoginResponse{false, "Unknown error", ""}
 	if (inputName == "") || (inputLogin == "") || (inputPassword == ""){
-		fmt.Printf("[registerHandler] Не все поля заполнены: name:%v  login:%v  password:%v\n", inputName, inputLogin, inputPassword)
 		resp.Success = false
-		resp.Message = fmt.Sprintf("Не все поля заполнены: name:%v  login:%v  password:%v\n", inputName, inputLogin, inputPassword)
+		resp.Message = fmt.Sprintf("Не все поля заполнены: name[%v]  login[%v]  password[%v]\n", inputName, inputLogin, inputPassword)
+		Tools.Message(resp.Message)
 	}else{
 		err := Tools.NewUser(inputLogin, inputName, inputPassword, 1)
 		if err != nil{
-			fmt.Println("[registerHandler] Ошибка регистрации пользователя: ", err.Error())
+			Tools.Log("Ошибка регистрации пользователя", err)
 			resp.Success = false
 			resp.Message = err.Error()
 		}else{
@@ -249,11 +249,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	inputLogin := r.FormValue("login")
 	inputPassword := r.FormValue("password")
-	fmt.Printf("[loginHandler] Обработка новых данных пользователя: %v\n", r.PostForm)
+	Tools.Message("Обработка новых данных пользователя", r.PostForm)
 	token, err := Tools.Login(inputLogin, inputPassword)
 	resp := LoginResponse{false, "Unknown error", "Гость"}
 	if err != nil {
-		fmt.Println("[loginHandler] Ошибка получения токена: ", err.Error())
+		Tools.Message("Ошибка получения токена", err)
 		resp.Success = false
 		resp.Message = err.Error()
 	}else{
@@ -264,7 +264,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			Path: "/",
 		}
 		http.SetCookie(w, &coockie)
-		fmt.Println("[loginHandler] Выполнен вход под именем [", inputLogin, "]")
+		Tools.Log("Выполнен вход под именем [", inputLogin, "]")
 		resp.Success = true
 		resp.Message = ""
 		resp.UserName = inputLogin
@@ -280,16 +280,16 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 		session.Expires = time.Now().AddDate(0, 0, -1)
 		user, err := Tools.ParseToken(session.Value)
 		if err != nil{
-			fmt.Println("[logoutHandler] ", err.Error())
+			Tools.Log(err.Error())
 		}else{
 			Tools.Logout(user.Name)
-			fmt.Println("[logoutHandler] Выход выполнен")
+			Tools.Message("Выход выполнен")
 			Tools.Login(Tools.DefaultUser, "")
 		}
 		session.Value = ""
 		http.SetCookie(w, session)
 	}else{
-		fmt.Println("[logoutHandler] ", err.Error())
+		Tools.Log(err.Error())
 	}
 
 	http.Redirect(w, r, "/home", http.StatusFound)
@@ -324,12 +324,12 @@ func GetUserMenu(lvl int) template.HTML{
 func galleryHandler(w http.ResponseWriter, r *http.Request)  {
 	if r.Method != "GET" {
 		http.NotFound(w, r)
-		fmt.Printf("[galleryHandler] Не метод GET: %v\n", r.URL)
+		Tools.Log("Не метод GET", r.URL)
 		return
 	}
 	param := r.URL.Query().Get("album")
 	if param == ""{
-		fmt.Printf("[galleryHandler] Параметр <album> не найден: %v\n", r.URL)
+		Tools.Log("Параметр <album> не найден", r.URL)
 		return
 	}
 	Albums := Tools.GetAlbums()
@@ -350,7 +350,7 @@ func galleryHandler(w http.ResponseWriter, r *http.Request)  {
 			tmpls := []string{"html/templates/gallery.html"}
 			err := rnd.Template(w, http.StatusOK, tmpls, params)
 			if err != nil{
-				fmt.Printf("%v\n", err)
+				Tools.Log(err.Error())
 			}
 			return
 		}
@@ -359,7 +359,7 @@ func galleryHandler(w http.ResponseWriter, r *http.Request)  {
 func imgHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.NotFound(w, r)
-		fmt.Printf("[imgHandler] Не метод GET: %v\n", r.URL)
+		Tools.Log("Не метод GET", r.URL)
 		return
 	}
 
@@ -406,7 +406,9 @@ func main() {
 	mux.Handle("/js/", fs)
 	port := "80"
 	time.Sleep(10 * time.Millisecond)
-	fmt.Println("starting server at 127.0.0.1:" + port)
-	http.ListenAndServe(":" + port, mux)
-
+	Tools.Log("Starting server at 127.0.0.1", port)
+	err := http.ListenAndServe(":" + port, mux)
+	if err != nil{
+		Tools.Log(err.Error())
+	}
 }

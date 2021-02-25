@@ -15,14 +15,12 @@ import (
 
 const (
 	RootDir = "./html/img/"
-	PageSize = 24
 )
 
-const (
-	Current = -1
-	Next = -2
-	Prev = -3
-)
+type TError struct{
+	Code int16
+	Message string
+}
 
 type Album struct{
 	Path		string		`json:"-"`
@@ -145,8 +143,58 @@ func GetFilesList(path string) []string{
 	return res
 }
 
-func Log(msg string){
+func Log(msg string, args ...interface{}){
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("[Log] Epic fail!")
+		}
+	}()
 	pc, _, _, _ := runtime.Caller(1)
 	funcName := runtime.FuncForPC(pc).Name()
-	log.Printf("[%v] %v\n", funcName, msg)
+	str := fmt.Sprintf("[%v] %v", funcName, msg)
+	if len(args) > 0{
+		str += fmt.Sprintf(":")
+	}
+	for _, arg := range args{
+		str += fmt.Sprintf(" %v", arg)
+	}
+
+	log.Println(str)
+}
+
+func Message(msg string, args ...interface{}){
+	defer func() {
+		if err := recover(); err != nil {
+			Log("Panic", err)
+		}
+	}()
+	pc, _, _, _ := runtime.Caller(1)
+	funcName := runtime.FuncForPC(pc).Name()
+	str := fmt.Sprintf("[%v] %v", funcName, msg)
+	if len(args) > 0{
+		str += fmt.Sprintf(":")
+	}
+	for _, arg := range args{
+		str += fmt.Sprintf(" %v", arg)
+	}
+
+	fmt.Println(str)
+}
+
+func NamedMessage(prefix string, args ...interface{}){
+	defer func() {
+		if err := recover(); err != nil {
+			Log("Panic", err)
+		}
+	}()
+	if len(args) == 0{
+		Log("No arguments")
+		return
+	}
+	str := fmt.Sprintf("[%v]", prefix)
+	for _, arg := range args{
+		str += fmt.Sprintf(" %v", arg)
+	}
+
+	fmt.Println(str)
 }

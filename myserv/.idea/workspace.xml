@@ -1,9 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="946af124-6d81-4030-be96-6971642527b9" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Tools/AccessControl.go" beforeDir="false" afterPath="$PROJECT_DIR$/Tools/AccessControl.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Tools/DataBase.go" beforeDir="false" afterPath="$PROJECT_DIR$/Tools/DataBase.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Tools/Tools.go" beforeDir="false" afterPath="$PROJECT_DIR$/Tools/Tools.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
@@ -101,21 +118,25 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1876" height="281" key="GridCell.Tab.0.bottom" timestamp="1614173823444">
+    <state x="96" y="96" width="1728" height="858" key="DiffContextDialog" timestamp="1614256126588">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
-    <state width="1876" height="281" key="GridCell.Tab.0.bottom/0.0.1920.1050/1920.0.1366.768@0.0.1920.1050" timestamp="1614173823444" />
-    <state width="1876" height="281" key="GridCell.Tab.0.center" timestamp="1614173823444">
+    <state x="96" y="96" width="1728" height="858" key="DiffContextDialog/0.0.1920.1050/1920.0.1366.768@0.0.1920.1050" timestamp="1614256126588" />
+    <state width="1876" height="281" key="GridCell.Tab.0.bottom" timestamp="1614261403427">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
-    <state width="1876" height="281" key="GridCell.Tab.0.center/0.0.1920.1050/1920.0.1366.768@0.0.1920.1050" timestamp="1614173823444" />
-    <state width="1876" height="281" key="GridCell.Tab.0.left" timestamp="1614173823444">
+    <state width="1876" height="281" key="GridCell.Tab.0.bottom/0.0.1920.1050/1920.0.1366.768@0.0.1920.1050" timestamp="1614261403427" />
+    <state width="1876" height="281" key="GridCell.Tab.0.center" timestamp="1614261403427">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
-    <state width="1876" height="281" key="GridCell.Tab.0.left/0.0.1920.1050/1920.0.1366.768@0.0.1920.1050" timestamp="1614173823444" />
-    <state width="1876" height="281" key="GridCell.Tab.0.right" timestamp="1614173823444">
+    <state width="1876" height="281" key="GridCell.Tab.0.center/0.0.1920.1050/1920.0.1366.768@0.0.1920.1050" timestamp="1614261403427" />
+    <state width="1876" height="281" key="GridCell.Tab.0.left" timestamp="1614261403427">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
-    <state width="1876" height="281" key="GridCell.Tab.0.right/0.0.1920.1050/1920.0.1366.768@0.0.1920.1050" timestamp="1614173823444" />
+    <state width="1876" height="281" key="GridCell.Tab.0.left/0.0.1920.1050/1920.0.1366.768@0.0.1920.1050" timestamp="1614261403427" />
+    <state width="1876" height="281" key="GridCell.Tab.0.right" timestamp="1614261403427">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state width="1876" height="281" key="GridCell.Tab.0.right/0.0.1920.1050/1920.0.1366.768@0.0.1920.1050" timestamp="1614261403427" />
   </component>
 </project>
