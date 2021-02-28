@@ -391,8 +391,13 @@ func init() {
 }
 
 func main() {
+
 	Tools.DBOpen()
 	Tools.DBInit()
+	return
+	Tools.ImgsProcess()
+	//Tools.DBCreateAlbum("test_album", "", 10)
+
 	fs := http.FileServer(http.Dir("html"))
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", rootHandler)

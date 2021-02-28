@@ -1,8 +1,12 @@
 package Tools
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"image/jpeg"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/nfnt/resize"
 )
 
 const (
@@ -143,6 +148,23 @@ func GetFilesList(path string) []string{
 	return res
 }
 
+func GetTmpImages() (error, []string){
+	files, err := ioutil.ReadDir(RootDir + "upload/")
+	if err != nil {
+		Log("Read File Sistem Fail", err)
+		return err, nil
+	}
+	res := make([]string, 0)
+	for _, file := range files{
+		if !file.IsDir(){
+			if strings.ToLower(filepath.Ext(file.Name())) == ".jpg" {
+				res = append(res, file.Name())
+			}
+		}
+	}
+	return nil, res
+}
+
 func Log(msg string, args ...interface{}){
 	defer func() {
 		if err := recover(); err != nil {
@@ -197,4 +219,81 @@ func NamedMessage(prefix string, args ...interface{}){
 	}
 
 	fmt.Println(str)
+}
+
+func GetHash(file *os.File) (string, error){
+	hash := md5.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hash.Sum(nil)[:16]), nil
+}
+
+// Processing uploaded images
+// Make S, M and L sizes. Place it to S, M and L folders
+func ImgsProcess(){
+	// Получение списка файлов для обработки
+	err, imgs := GetTmpImages()
+	if err != nil{
+		Log(err.Error())
+		return
+	}
+	var hashName string	// Уникальне имя для изображения
+	for _, f := range imgs{
+		path := RootDir + "upload/" + f
+		Log("Обработка", path)
+		imgIn, err := os.Open(path)
+		if err != nil{
+			Log("Не удалось открыть изображение", err)
+			continue
+		}
+		if hashName, err = GetHash(imgIn); err == nil {
+			Log("Новое имя файлов", hashName)
+			imgIn.Seek(0, 0)
+			imgJpg, err := jpeg.Decode(imgIn)
+			if err != nil{
+				Log("Ошибка декодирования", err)
+			}else{
+				imgS := resize.Thumbnail(400, 400, imgJpg, resize.Bicubic)
+				imgM := resize.Thumbnail(1920, 1080, imgJpg, resize.Bicubic)
+
+				if _, err := os.Stat(RootDir + "s/" + hashName + ".jpg"); !os.IsNotExist(err) {
+					imgIn.Close()
+					Log("Изображение с таким именем уже существует", hashName)
+				}else{
+					imgOut, err := os.Create(RootDir + "s/" + hashName + ".jpg")
+					if err != nil{
+						Log("Не удалось сохранить S файл", err)
+					}else{
+						jpeg.Encode(imgOut, imgS,nil)
+						imgOut.Close()
+					}
+				}
+
+				if _, err := os.Stat(RootDir + "m/" + hashName + ".jpg"); !os.IsNotExist(err) {
+					imgIn.Close()
+					Log("Изображение с таким именем уже существует", hashName)
+				}else{
+					imgOut, err := os.Create(RootDir + "m/" + hashName + ".jpg")
+					if err != nil{
+						Log("Не удалось сохранить M файл", err)
+					}else{
+						jpeg.Encode(imgOut, imgM,nil)
+						imgOut.Close()
+					}
+				}
+			}
+		}
+		imgIn.Close()
+		if _, err := os.Stat(RootDir + "l/" + hashName + ".jpg"); !os.IsNotExist(err) {
+			imgIn.Close()
+			Log("Изображение с таким именем уже существует", hashName)
+		}else {
+			err = os.Rename(path, RootDir+"l/"+hashName+".jpg")
+			if err != nil {
+				Log("Не удалось сохранить L файл", err)
+			}
+		}
+		Log("*********************************")
+	}
 }

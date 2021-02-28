@@ -33,7 +33,7 @@ var DefaultUser = "Guest"
 func GetUser(name string) (User, error){
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("[GetUser] panic occurred:", err)
+			Log("Panic", err)
 		}
 	}()
 	request := fmt.Sprintf("select * from users where login = '%v'", name)
