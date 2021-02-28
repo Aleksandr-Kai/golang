@@ -9,7 +9,6 @@ import (
 var db *sql.DB
 
 type DBAlbum struct{
-	ID int
 	Name string
 	Description string
 	AccessLvl int
@@ -17,7 +16,6 @@ type DBAlbum struct{
 }
 
 type DBImage struct {
-	ID int
 	Name string
 	Description string
 	AccessLvl int
@@ -81,7 +79,7 @@ func DBInit(){
 		NamedMessage("SQL", "Create user 'guest': Ok")
 	}
 
-	request = fmt.Sprintf("create table if not exists albums(name text not null, description text, accesslvl int not null, primary key(name));")
+	request = fmt.Sprintf("create table if not exists albums(name nvarchar(128) not null, description nvarchar(256), accesslvl int not null, primary key(name));")
 	_, err = db.Query(request)
 	if err != nil{
 		NamedMessage("SQL", "Create table 'albums':", err)
@@ -89,7 +87,7 @@ func DBInit(){
 		NamedMessage("SQL", "Create table 'albums': Ok")
 	}
 
-	request = fmt.Sprintf("create table if not exists photos(name text not null, description text, accesslvl int not null, primary key(name));")
+	request = fmt.Sprintf("create table if not exists photos(name nvarchar(128) not null, description nvarchar(256), accesslvl int not null, primary key(name));")
 	_, err = db.Query(request)
 	if err != nil{
 		NamedMessage("SQL", "Create table 'photos':", err)
@@ -97,7 +95,8 @@ func DBInit(){
 		NamedMessage("SQL", "Create table 'photos': Ok")
 	}
 
-	request = fmt.Sprintf("create table if not exists album_photo(album int not null, photo int not null, foreign key(album) references albums(name) on delete cascade, foreign key(photo) references photos(name) on delete cascade);")
+	request = fmt.Sprintf("create table if not exists album_photo(album nvarchar(128) not null, photo nvarchar(128) not null, " +
+		"foreign key(album) references albums(name), foreign key(photo) references photos(name));")
 	_, err = db.Query(request)
 	if err != nil{
 		NamedMessage("SQL", "Create table 'album_photo':", err)
@@ -107,7 +106,7 @@ func DBInit(){
 }
 
 func DBCreateAlbum(name string, description string, accesslvl int){
-	request := fmt.Sprintf("insert into albums values('%v', '%v', %v);", name, description, accesslvl)
+	request := fmt.Sprintf("insert into albums values(N'%v', N'%v', %v);", name, description, accesslvl)
 	_, err := db.Query(request)
 	if err != nil{
 		NamedMessage("SQL", "Create album:", err)
@@ -141,6 +140,36 @@ func DBGetAlbums(accesslvl int) []string{
 	return nil
 }
 
-func DBPlaceImage(image DBImage) error{
+func DBPlaceImage(image DBImage, album string) error{
+	request := fmt.Sprintf("insert into photos values('%v', '%v', %v);", image.Name, image.Description, image.AccessLvl)
+	_, err := db.Query(request)
+	if err != nil{
+		NamedMessage("SQL", "Не удалось добавить изображение ", image.Name, " в базу: ", err)
+		return err
+	}
+
+	request = fmt.Sprintf("insert into album_photo values('%v', '%v');", album, image.Name)
+	_, err = db.Query(request)
+	if err != nil{
+		NamedMessage("SQL", "Не удалось добавить изображение ", image.Name, " в базу: ", err)
+		return err
+	}
+
 	return nil
+}
+
+func DBDeleteImage(image DBImage) error{
+	request := fmt.Sprintf("delete from photos where name='%v';", image.Name)
+	_, err := db.Query(request)
+	if err != nil{
+		NamedMessage("SQL", "Не удалось удалить изображение ", image.Name, err)
+		return err
+	}
+
+	DeleteImage(image.Name)
+	return nil
+}
+
+func DBGetImages(album string, accesslvl int) []DBImage{
+	request := fmt.Sprintf("select * from albums al, images im,  where name='%v';", image.Name)
 }

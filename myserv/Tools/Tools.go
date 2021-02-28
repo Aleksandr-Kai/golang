@@ -231,7 +231,7 @@ func GetHash(file *os.File) (string, error){
 
 // Processing uploaded images
 // Make S, M and L sizes. Place it to S, M and L folders
-func ImgsProcess(){
+func ImgsProcess(album string){
 	// Получение списка файлов для обработки
 	err, imgs := GetTmpImages()
 	if err != nil{
@@ -294,6 +294,26 @@ func ImgsProcess(){
 				Log("Не удалось сохранить L файл", err)
 			}
 		}
+		DBPlaceImage(DBImage{hashName, "", 10}, album)
 		Log("*********************************")
+	}
+}
+
+func DeleteImage(name string){
+	err := os.Remove(RootDir + "upload/s/" + name + ".jpg")
+	if err != nil{
+		Log(err.Error())
+	}
+	err = os.Remove(RootDir + "upload/m/" + name + ".jpg")
+	if err != nil{
+		Log(err.Error())
+	}
+	err = os.Remove(RootDir + "upload/l/" + name + ".jpg")
+	if err != nil{
+		Log(err.Error())
+	}
+	err = os.Remove(RootDir + "upload/upload/" + name + ".jpg")
+	if err != nil{
+		Log(err.Error())
 	}
 }
