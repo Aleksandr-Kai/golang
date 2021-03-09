@@ -169,7 +169,8 @@ func DBDeleteImage(image DBImage) error{
 	DeleteImage(image.Name)
 	return nil
 }
-
+/*
 func DBGetImages(album string, accesslvl int) []DBImage{
 	request := fmt.Sprintf("select * from albums al, images im,  where name='%v';", image.Name)
 }
+*/
