@@ -43,9 +43,9 @@ func Scan(doc string) (urllist []ErrUlr) {
 				continue
 			}
 			for _, a := range attr {
-				//fmt.Printf("   [%v:%v] %v\n", row, strings.Index(t, a)+col, a[5:])
-				pattern := `((http[s]?)://)([^:/\s]+)(:([^\/]*))?((\/\w+)*\/)([\w\-\.]+[^#?\s]+)(\?([^#]*))?(#(.*))?`
-				matched, err := regexp.Match(pattern, []byte(a[5:]))
+				//fmt.Printf("   [%v:%v] %v\n", row, strings.Index(t, a)+col, a[6:len(a)-1])
+				pattern := `(http|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])`
+				matched, err := regexp.Match(pattern, []byte(a[6:len(a)-1]))
 				if err != nil {
 					fmt.Println("regexp error: " + err.Error())
 				}
@@ -65,6 +65,13 @@ func Scan(doc string) (urllist []ErrUlr) {
 }
 
 func CheckPage(htm []byte, header http.Header) (error, []ErrUlr) {
+	defer func() {
+		if err := recover(); err != nil {
+			pc, _, _, _ := runtime.Caller(0)
+			funcName := runtime.FuncForPC(pc).Name()
+			log.Println(fmt.Sprintf("Panic happend in function %v: %v", funcName, err))
+		}
+	}()
 	var resErr error                      // default error is nil
 	ContentType := header["Content-Type"] // get content type from header
 	charsetInHeader := ""
@@ -87,8 +94,38 @@ func CheckPage(htm []byte, header http.Header) (error, []ErrUlr) {
 		resErr = errors.New(fmt.Sprintf("Declared charset [%v], but detected charset is [%v]", charsetInHeader, charsetDetected.Charset))
 	}
 	//************************************************************************************************************************************************
-
-	return resErr, Scan(string(htm))
+	urllist := make([]ErrUlr, 0, 100)
+	strs := strings.Split(string(htm), "\n")
+	for row, str := range strs {
+		regex := regexp.MustCompile(`<(img|a)\s.+?>`)
+		tag := regex.FindAllString(str, -1)
+		for _, t := range tag {
+			col := strings.Index(str, t) + 1
+			//fmt.Printf("[%v:%v] %v\n", row, col, t)
+			regex = regexp.MustCompile(`(href|src)=('|").{0,}?('|")`)
+			attr := regex.FindAllString(str, -1)
+			if len(attr) == 0 {
+				//fmt.Printf("X %s is not a valid Tag\n", fmt.Sprintf("[%v:%v] %v", row, col, t))
+				urllist = append(urllist, ErrUlr{row, col, fmt.Sprintf("%s is not a valid Tag", t)})
+				continue
+			}
+			for _, a := range attr {
+				//fmt.Printf("   [%v:%v] %v\n", row, strings.Index(t, a)+col, a[5:])
+				pattern := `((http[s]?)://)([^:/\s]+)(:([^\/]*))?((\/\w+)*\/)([\w\-\.]+[^#?\s]+)(\?([^#]*))?(#(.*))?`
+				matched, err := regexp.Match(pattern, []byte(a[5:]))
+				if err != nil {
+					fmt.Println("regexp error: " + err.Error())
+				}
+				if !matched {
+					//fmt.Printf("X %s is not a valid URL\n", fmt.Sprintf("[%v:%v] %v", row, strings.Index(t, a)+col, a[5:]))
+					urllist = append(urllist, ErrUlr{row, strings.Index(t, a) + col, fmt.Sprintf("%s is not a valid URL", a[5:])})
+				} /* else {
+					fmt.Printf("√ %s is a valid URL\n", fmt.Sprintf("[%v:%v] %v", row, strings.Index(t, a)+col, a[5:]))
+				}*/
+			}
+		}
+	}
+	return resErr, urllist
 }
 
 func main() {
