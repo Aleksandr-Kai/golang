@@ -64,6 +64,8 @@ func Scan(doc string) (urllist []ErrUlr) {
 	return nil
 }
 
+// Returns error if the encoding does not match the one declared in the header
+// Returns slice of struct with position and description of bad URL
 func CheckPage(htm []byte, header http.Header) (error, []ErrUlr) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -72,6 +74,8 @@ func CheckPage(htm []byte, header http.Header) (error, []ErrUlr) {
 			log.Println(fmt.Sprintf("Panic happend in function %v: %v", funcName, err))
 		}
 	}()
+	//************************************************************************************************************************************************
+	// Verify charset
 	var resErr error                      // default error is nil
 	ContentType := header["Content-Type"] // get content type from header
 	charsetInHeader := ""
@@ -94,29 +98,37 @@ func CheckPage(htm []byte, header http.Header) (error, []ErrUlr) {
 		resErr = errors.New(fmt.Sprintf("Declared charset [%v], but detected charset is [%v]", charsetInHeader, charsetDetected.Charset))
 	}
 	//************************************************************************************************************************************************
-	urllist := make([]ErrUlr, 0, 100)
-	strs := strings.Split(string(htm), "\n")
+	// Verify URLs
+	urllist := make([]ErrUlr, 0, 100)        // list of invalid urls
+	strs := strings.Split(string(htm), "\n") // split for row number
+
+	// for each row search tags
 	for row, str := range strs {
+		// get all <a> and <img> tags
 		regex := regexp.MustCompile(`<(img|a)\s.+?>`)
 		tag := regex.FindAllString(str, -1)
+		// for each tag check url
 		for _, t := range tag {
-			col := strings.Index(str, t) + 1
+			col := strings.Index(str, t) + 1 // remember col of tag, if tag have not url
 			//fmt.Printf("[%v:%v] %v\n", row, col, t)
+			// get attribute with URL
 			regex = regexp.MustCompile(`(href|src)=('|").{0,}?('|")`)
 			attr := regex.FindAllString(str, -1)
-			if len(attr) == 0 {
+			if len(attr) == 0 { // if have not attribute, save error and continue
 				//fmt.Printf("X %s is not a valid Tag\n", fmt.Sprintf("[%v:%v] %v", row, col, t))
 				urllist = append(urllist, ErrUlr{row, col, fmt.Sprintf("%s is not a valid Tag", t)})
 				continue
 			}
 			for _, a := range attr {
 				//fmt.Printf("   [%v:%v] %v\n", row, strings.Index(t, a)+col, a[5:])
-				pattern := `((http[s]?)://)([^:/\s]+)(:([^\/]*))?((\/\w+)*\/)([\w\-\.]+[^#?\s]+)(\?([^#]*))?(#(.*))?`
-				matched, err := regexp.Match(pattern, []byte(a[5:]))
+				// verify url in attribute
+				pattern := `(http|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])`
+				matched, err := regexp.Match(pattern, []byte(a[6:len(a)-1]))
+				// any error message
 				if err != nil {
 					fmt.Println("regexp error: " + err.Error())
 				}
-				if !matched {
+				if !matched { // if URL is not valid, save error
 					//fmt.Printf("X %s is not a valid URL\n", fmt.Sprintf("[%v:%v] %v", row, strings.Index(t, a)+col, a[5:]))
 					urllist = append(urllist, ErrUlr{row, strings.Index(t, a) + col, fmt.Sprintf("%s is not a valid URL", a[5:])})
 				} /* else {
