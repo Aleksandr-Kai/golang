@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 )
 
 // Struct for invalid URLs
@@ -29,35 +30,35 @@ func Scan(doc string) (urllist []ErrUlr) {
 	}()
 
 	strs := strings.Split(doc, "\n")
+	wg := sync.WaitGroup{}
 	for row, str := range strs {
-		regex := regexp.MustCompile(`<(img|a)\s.+?>`)
-		tag := regex.FindAllString(str, -1)
-		for _, t := range tag {
-			col := strings.Index(str, t) + 1
-			//fmt.Printf("[%v:%v] %v\n", row, col, t)
-			regex = regexp.MustCompile(`(href|src)=('|").{0,}?('|")`)
-			attr := regex.FindAllString(str, -1)
-			if len(attr) == 0 {
-				//fmt.Printf("X %s is not a valid Tag\n", fmt.Sprintf("[%v:%v] %v", row, col, t))
-				urllist = append(urllist, ErrUlr{row, col, fmt.Sprintf("%s is not a valid Tag", t)})
-				continue
-			}
-			for _, a := range attr {
-				//fmt.Printf("   [%v:%v] %v\n", row, strings.Index(t, a)+col, a[6:len(a)-1])
-				pattern := `(http|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])`
-				matched, err := regexp.Match(pattern, []byte(a[6:len(a)-1]))
-				if err != nil {
-					fmt.Println("regexp error: " + err.Error())
+		wg.Add(1)
+		go func(str string, row int) {
+			defer wg.Done()
+			regex := regexp.MustCompile(`<(img|a)\s.+?>`)
+			tag := regex.FindAllString(str, -1)
+			for _, t := range tag {
+				col := strings.Index(str, t) + 1
+				regex = regexp.MustCompile(`(href|src)=('|").{0,}?('|")`)
+				attr := regex.FindAllString(str, -1)
+				if len(attr) == 0 {
+					urllist = append(urllist, ErrUlr{row, col, fmt.Sprintf("%s is not a valid Tag", t)})
+					return
 				}
-				if !matched {
-					//fmt.Printf("X %s is not a valid URL\n", fmt.Sprintf("[%v:%v] %v", row, strings.Index(t, a)+col, a[5:]))
-					urllist = append(urllist, ErrUlr{row, strings.Index(t, a) + col, fmt.Sprintf("%s is not a valid URL", a[5:])})
-				} /* else {
-					fmt.Printf("√ %s is a valid URL\n", fmt.Sprintf("[%v:%v] %v", row, strings.Index(t, a)+col, a[5:]))
-				}*/
+				for _, a := range attr {
+					pattern := `(http|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])`
+					matched, err := regexp.Match(pattern, []byte(a[6:len(a)-1]))
+					if err != nil {
+						fmt.Println("regexp error: " + err.Error())
+					}
+					if !matched {
+						urllist = append(urllist, ErrUlr{row, strings.Index(t, a) + col, fmt.Sprintf("%s is not a valid URL", a[5:])})
+					}
+				}
 			}
-		}
+		}(str, row)
 	}
+	wg.Wait()
 	if len(urllist) > 0 {
 		return urllist
 	}
