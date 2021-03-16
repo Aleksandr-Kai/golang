@@ -161,62 +161,6 @@ func TestScan(t *testing.T) {
 	}
 }
 
-func TestScan1(t *testing.T) {
-	fmt.Println("****************************************************************************")
-	fmt.Println("Scan 1")
-
-	fmt.Println("Test valid URLs")
-	res := Scan1(validURLs)
-	if res != nil {
-		for _, r := range res {
-			fmt.Printf("[%v:%v] %v\n", r.Row, r.Col, r.Message)
-		}
-		t.Error("Test fail")
-	} else {
-		fmt.Println("Test pass")
-	}
-
-	fmt.Println("Test bad URLs")
-	res = Scan1(invalidURLs)
-	l := len(strings.Split(invalidURLs, "\n")) - 2
-	if len(res) != l {
-		for _, r := range res {
-			fmt.Printf("[%v:%v] %v\n", r.Row, r.Col, r.Message)
-		}
-		t.Error(fmt.Sprintf("Test pass: [expected %v] vs [result %v]", len(res), l))
-	} else {
-		fmt.Println("Test pass")
-	}
-}
-
-func TestScan2(t *testing.T) {
-	fmt.Println("****************************************************************************")
-	fmt.Println("Scan 2")
-
-	fmt.Println("Test valid URLs")
-	res := Scan2(validURLs)
-	if res != nil {
-		for _, r := range res {
-			fmt.Printf("[%v:%v] %v\n", r.Row, r.Col, r.Message)
-		}
-		t.Error("Test fail")
-	} else {
-		fmt.Println("Test pass")
-	}
-
-	fmt.Println("Test bad URLs")
-	res = Scan2(invalidURLs)
-	l := len(strings.Split(invalidURLs, "\n")) - 2
-	if len(res) != l {
-		for _, r := range res {
-			fmt.Printf("[%v:%v] %v\n", r.Row, r.Col, r.Message)
-		}
-		t.Error(fmt.Sprintf("Test pass: [expected %v] vs [result %v]", len(res), l))
-	} else {
-		fmt.Println("Test pass")
-	}
-}
-
 func BenchmarkScan(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Scan(invalidURLs)

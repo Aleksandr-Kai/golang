@@ -75,12 +75,26 @@ func Scan(doc string) []ErrUlr {
 	regexAttr := regexp.MustCompile(`(href|src)=('|").{0,}?('|")`)
 	patternURL := `(http|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])`
 	wg := sync.WaitGroup{}
-	resChan := make(chan ErrUlr, 100)
+	resChan := make(chan ErrUlr, 5)
+
+	c := make(chan interface{})
+	go func() {
+		for res := range resChan {
+			urllist = append(urllist, res)
+		}
+		c <- 0
+	}()
+
+	limitRoutins := make(chan interface{}, 10)
 	// for each row search tags
 	for row, str := range strs {
 		wg.Add(1)
+		limitRoutins <- 0
 		go func(r int, s string) {
-			defer wg.Done()
+			defer func() {
+				wg.Done()
+				<-limitRoutins
+			}()
 			// get all <a> and <img> tags
 			tags := regexTag.FindAllString(s, -1)
 			// for each tag check url
@@ -114,13 +128,7 @@ func Scan(doc string) []ErrUlr {
 		}(row, str)
 
 	}
-	c := make(chan interface{})
-	go func() {
-		for res := range resChan {
-			urllist = append(urllist, res)
-		}
-		c <- 0
-	}()
+
 	wg.Wait()
 	close(resChan)
 	<-c
