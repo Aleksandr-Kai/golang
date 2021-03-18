@@ -18,48 +18,48 @@ import (
 var rnd *renderer.Render
 
 type ImageInfo struct {
-	Name		string	`json:"-"`
-	Title		string	`json:"title"`
-	Description	string	`json:"description"`
+	Name        string `json:"-"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 }
 
 type TmplParams struct {
-	AlbumTitle	string
-	Image		[]ImageInfo
+	AlbumTitle string
+	Image      []ImageInfo
 }
 
 type TmplAlbum struct {
-	AlbumImg			string
-	AlbumTitle			string
-	AlbumTitleComment	string
-	AlbumDescription	string
-	AlbumPath			string
+	AlbumImg          string
+	AlbumTitle        string
+	AlbumTitleComment string
+	AlbumDescription  string
+	AlbumPath         string
 }
 
 type LoginResponse struct {
-	Success		bool	`json:"success"`
-	Message		string	`json:"message"`
-	UserName	string	`json:"user_name"`
+	Success  bool   `json:"success"`
+	Message  string `json:"message"`
+	UserName string `json:"user_name"`
 }
 
-func GetSession(r *http.Request) (user Tools.User, err error) {
+func GetSession(r *http.Request) (user Tools.DBUser, err error) {
 	session, err := r.Cookie("session_id")
 
 	if err != nil {
 		Tools.Log(err.Error())
-		user, err = Tools.GetUser(Tools.DefaultUser)
-		if err != nil{
+		user, err = Tools.DBGetUser(Tools.DefaultUser)
+		if err != nil {
 			Tools.Log("DefaultUser", err)
-			user = Tools.User{Name: Tools.DefaultUser, PublicName: "Гость", Password: "", Access: 10, Active: true}
+			user = Tools.DBUser{Name: Tools.DefaultUser, PublicName: "Гость", Password: "", Access: 10, Active: true}
 		}
-	}else{
+	} else {
 		user, err = Tools.ParseToken(session.Value)
 		if err != nil {
 			Tools.Log(err.Error())
-			user, err = Tools.GetUser(Tools.DefaultUser)
-			if err != nil{
+			user, err = Tools.DBGetUser(Tools.DefaultUser)
+			if err != nil {
 				Tools.Log("DefaultUser", err)
-				user = Tools.User{Name: Tools.DefaultUser, PublicName: "Гость", Password: "", Access: 10, Active: true}
+				user = Tools.DBUser{Name: Tools.DefaultUser, PublicName: "Гость", Password: "", Access: 10, Active: true}
 			}
 		}
 	}
@@ -68,12 +68,12 @@ func GetSession(r *http.Request) (user Tools.User, err error) {
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := GetSession(r)
-	if err != nil{
+	if err != nil {
 		coockie := http.Cookie{
-			Name: "session_id",
-			Value: "",
+			Name:    "session_id",
+			Value:   "",
 			Expires: time.Now().AddDate(0, 0, -1),
-			Path: "/",
+			Path:    "/",
 		}
 		http.SetCookie(w, &coockie)
 	}
@@ -97,7 +97,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 							name = user.Name
 						}
 						prms := struct {
-							UserName string;
+							UserName string
 							UserMenu interface{}
 						}{name, GetUserMenu(user.Access)}
 						err := rnd.Template(w, http.StatusOK, tmpls, prms)
@@ -156,52 +156,53 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		default:
 			rnd.Template(w, http.StatusOK, []string{"html/templates/404.html"}, nil)
 		}
-	}else if r.Method == http.MethodPost{
+	} else if r.Method == http.MethodPost {
 		switch r.URL.Path {
-		case "/config":{
-			//fmt.Printf("[rootHandler] Обработка новых данных пользователя:\n   %v\n   %v\n", user, r.PostForm)
-			inputName := r.FormValue("newname")
-			inputOldPass := r.FormValue("oldpass")
-			inputNewPass := r.FormValue("newpass")
-			//fmt.Printf("[rootHandler]\n   Новое имя: %v\n   Новый пароль: %v\n   Старый пароль: %v\n", inputName, inputNewPass, inputNewPass)
+		case "/config":
+			{
+				//fmt.Printf("[rootHandler] Обработка новых данных пользователя:\n   %v\n   %v\n", user, r.PostForm)
+				inputName := r.FormValue("newname")
+				inputOldPass := r.FormValue("oldpass")
+				inputNewPass := r.FormValue("newpass")
+				//fmt.Printf("[rootHandler]\n   Новое имя: %v\n   Новый пароль: %v\n   Старый пароль: %v\n", inputName, inputNewPass, inputNewPass)
 
-			resp := LoginResponse{false, "Неизвестная ошибка", ""}
-			if user.Name != Tools.DefaultUser {
-				u, err := Tools.GetUser(user.Name)
-				if err == nil{
-					if u.Password != inputOldPass {
-						resp.Message = "Не верный пароль!"
-						//fmt.Println("[rootHandler] Не верный пароль!")
-					} else {
-						upd := (inputNewPass != "") || (inputName != "")
-						if upd && inputNewPass != "" {
-							if len(inputNewPass) < 8 {
-								resp.Message = "Новый пароль слишком короткий"
-								//fmt.Println("[rootHandler] Новый пароль слишком короткий")
-								upd = false
-							} else {
-								//fmt.Println("[rootHandler] Пароль изменен")
-								user.Password = inputNewPass
+				resp := LoginResponse{false, "Неизвестная ошибка", ""}
+				if user.Name != Tools.DefaultUser {
+					u, err := Tools.DBGetUser(user.Name)
+					if err == nil {
+						if u.Password != inputOldPass {
+							resp.Message = "Не верный пароль!"
+							//fmt.Println("[rootHandler] Не верный пароль!")
+						} else {
+							upd := (inputNewPass != "") || (inputName != "")
+							if upd && inputNewPass != "" {
+								if len(inputNewPass) < 8 {
+									resp.Message = "Новый пароль слишком короткий"
+									//fmt.Println("[rootHandler] Новый пароль слишком короткий")
+									upd = false
+								} else {
+									//fmt.Println("[rootHandler] Пароль изменен")
+									user.Password = inputNewPass
+								}
 							}
-						}
-						if upd && (inputName != "") {
-							//fmt.Println("[rootHandler] Имя пользователя изменено")
-							user.PublicName = inputName
-						}
-						if upd {
-							Tools.UpdateUser(user)
-							resp.Success = true
-							resp.Message = "Данные пользователя обновлены"
-							//fmt.Println("[rootHandler] Данные пользователя обновлены")
+							if upd && (inputName != "") {
+								//fmt.Println("[rootHandler] Имя пользователя изменено")
+								user.PublicName = inputName
+							}
+							if upd {
+								Tools.DBUpdateUser(user)
+								resp.Success = true
+								resp.Message = "Данные пользователя обновлены"
+								//fmt.Println("[rootHandler] Данные пользователя обновлены")
+							}
 						}
 					}
 				}
-			}
 
-			answer, _ := json.Marshal(resp)
-			//fmt.Printf("[rootHandler] Ответ браузеру: %v\n", string(answer))
-			w.Write(answer)
-		}
+				answer, _ := json.Marshal(resp)
+				//fmt.Printf("[rootHandler] Ответ браузеру: %v\n", string(answer))
+				w.Write(answer)
+			}
 		}
 	}
 }
@@ -220,17 +221,17 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	inputPassword := r.FormValue("password")
 
 	resp := LoginResponse{false, "Unknown error", ""}
-	if (inputName == "") || (inputLogin == "") || (inputPassword == ""){
+	if (inputName == "") || (inputLogin == "") || (inputPassword == "") {
 		resp.Success = false
 		resp.Message = fmt.Sprintf("Не все поля заполнены: name[%v]  login[%v]  password[%v]\n", inputName, inputLogin, inputPassword)
 		Tools.Message(resp.Message)
-	}else{
-		err := Tools.NewUser(inputLogin, inputName, inputPassword, 1)
-		if err != nil{
+	} else {
+		err := Tools.DBNewUser(inputLogin, inputName, inputPassword, 1)
+		if err != nil {
 			Tools.Log("Ошибка регистрации пользователя", err)
 			resp.Success = false
 			resp.Message = err.Error()
-		}else{
+		} else {
 			resp.Success = true
 			resp.Message = "Добро пожаловать!"
 			resp.UserName = inputName
@@ -256,12 +257,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		Tools.Message("Ошибка получения токена", err)
 		resp.Success = false
 		resp.Message = err.Error()
-	}else{
+	} else {
 		coockie := http.Cookie{
-			Name: "session_id",
-			Value: token,
+			Name:    "session_id",
+			Value:   token,
 			Expires: time.Now().Add(512 * time.Hour),
-			Path: "/",
+			Path:    "/",
 		}
 		http.SetCookie(w, &coockie)
 		Tools.Log("Выполнен вход под именем [", inputLogin, "]")
@@ -275,27 +276,27 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := r.Cookie("session_id")
-	if err == nil{
+	if err == nil {
 		//fmt.Println("[logoutHandler] Куки получено")
 		session.Expires = time.Now().AddDate(0, 0, -1)
 		user, err := Tools.ParseToken(session.Value)
-		if err != nil{
+		if err != nil {
 			Tools.Log(err.Error())
-		}else{
+		} else {
 			Tools.Logout(user.Name)
 			Tools.Message("Выход выполнен")
 			Tools.Login(Tools.DefaultUser, "")
 		}
 		session.Value = ""
 		http.SetCookie(w, session)
-	}else{
+	} else {
 		Tools.Log(err.Error())
 	}
 
 	http.Redirect(w, r, "/home", http.StatusFound)
 }
 
-func GetUserMenu(lvl int) template.HTML{
+func GetUserMenu(lvl int) template.HTML {
 	var mLogin = template.HTML(`
 		<li id="login"><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modal-login">Вход</a></li>
 	`)
@@ -309,10 +310,11 @@ func GetUserMenu(lvl int) template.HTML{
 		<li id="divider"><hr class="dropdown-divider"></li>
 	`)
 
-	switch lvl{
-	case 0:{
-		return mConfig + mLine + mLogout
-	}
+	switch lvl {
+	case 0:
+		{
+			return mConfig + mLine + mLogout
+		}
 	case 1:
 		return mConfig + mLine + mLogout
 	default:
@@ -321,14 +323,14 @@ func GetUserMenu(lvl int) template.HTML{
 
 }
 
-func galleryHandler(w http.ResponseWriter, r *http.Request)  {
+func galleryHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.NotFound(w, r)
 		Tools.Log("Не метод GET", r.URL)
 		return
 	}
 	param := r.URL.Query().Get("album")
-	if param == ""{
+	if param == "" {
 		Tools.Log("Параметр <album> не найден", r.URL)
 		return
 	}
@@ -343,13 +345,13 @@ func galleryHandler(w http.ResponseWriter, r *http.Request)  {
 					err = json.Unmarshal(txt, &params.Image[i])
 					//params.Image[i].Description = string(txt)
 					//fmt.Println("[galleryHandler] Description: " + string(txt))
-				}/*else{
+				} /*else{
 					fmt.Println("[galleryHandler] " + err.Error())
 				}*/
 			}
 			tmpls := []string{"html/templates/gallery.html"}
 			err := rnd.Template(w, http.StatusOK, tmpls, params)
-			if err != nil{
+			if err != nil {
 				Tools.Log(err.Error())
 			}
 			return
@@ -374,12 +376,12 @@ func imgHandler(w http.ResponseWriter, r *http.Request) {
 		//fmt.Printf("File exists: %v\n", err.Error())
 		w.Header().Set("Content-Type", "image/jpeg")
 		if size == "s" {
-			http.ServeFile(w, r, Tools.RootDir + "no_images.png")
-		}else{
-			http.ServeFile(w, r, Tools.RootDir + album + "/s/" + name)
+			http.ServeFile(w, r, Tools.RootDir+"no_images.png")
+		} else {
+			http.ServeFile(w, r, Tools.RootDir+album+"/s/"+name)
 		}
 
-	}else{
+	} else {
 		w.Header().Set("Content-Type", "image/jpeg")
 		http.ServeFile(w, r, path)
 		//fmt.Printf("%v\nAlbum: %v\nName: %v\nFormat: %v\n", r.URL, album, name, size)
@@ -394,8 +396,8 @@ func main() {
 
 	Tools.DBOpen()
 	Tools.DBInit()
-	Tools.DBCreateAlbum("test_album", "", 10)
-	Tools.ImgsProcess("test_album")
+	Tools.DBCreateAlbum("album1", "", 10)
+	Tools.ImgsProcess("album1")
 	return
 	Tools.DBCreateAlbum("test_album", "", 10)
 
@@ -413,8 +415,8 @@ func main() {
 	port := "80"
 	time.Sleep(10 * time.Millisecond)
 	Tools.Log("Starting server at 127.0.0.1", port)
-	err := http.ListenAndServe(":" + port, mux)
-	if err != nil{
+	err := http.ListenAndServe(":"+port, mux)
+	if err != nil {
 		Tools.Log(err.Error())
 	}
 }

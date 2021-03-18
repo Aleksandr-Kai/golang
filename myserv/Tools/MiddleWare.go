@@ -9,11 +9,21 @@ import (
 
 func MWAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//sql.open
 		fmt.Println("adminAuthMiddleware", r.URL.Path)
-		_, err := r.Cookie("session_id")
-		// учебный пример! это не проверка авторизации!
+		session, err := r.Cookie("session_id")
 		if err != nil {
+			fmt.Println("no auth at", r.URL.Path)
+			http.Redirect(w, r, "/", http.StatusFound)
+			return
+		}
+		user, err := ParseToken(session.Value)
+		if err != nil {
+			fmt.Println("no auth at", r.URL.Path)
+			http.Redirect(w, r, "/", http.StatusFound)
+			return
+		}
+		user, err = DBGetUser(user.Name)
+		if (err != nil) || !user.Active {
 			fmt.Println("no auth at", r.URL.Path)
 			http.Redirect(w, r, "/", http.StatusFound)
 			return
