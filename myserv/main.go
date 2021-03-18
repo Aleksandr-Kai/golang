@@ -393,11 +393,17 @@ func init() {
 }
 
 func main() {
-
+	Tools.DBCreate()
 	Tools.DBOpen()
 	Tools.DBInit()
 	Tools.DBCreateAlbum("album1", "", 10)
 	Tools.ImgsProcess("album1")
+	album, errr := Tools.DBGetAlbum(Tools.DBAlbum{Name: "album1", AccessLvl: 0})
+	if errr != nil {
+		fmt.Println(errr.Error())
+	} else {
+		fmt.Println(album.String())
+	}
 	return
 	Tools.DBCreateAlbum("test_album", "", 10)
 

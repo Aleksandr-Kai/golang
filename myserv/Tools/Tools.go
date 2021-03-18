@@ -160,6 +160,11 @@ func GetTmpImages() (error, []string) {
 	files, err := ioutil.ReadDir(RootDir + "upload/")
 	if err != nil {
 		Log("Read File Sistem Fail", err)
+		ex, err := os.Executable()
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(ex)
 		return err, nil
 	}
 	res := make([]string, 0)
@@ -181,6 +186,8 @@ func Log(msg string, args ...interface{}) {
 	}()
 	pc, _, _, _ := runtime.Caller(1)
 	funcName := runtime.FuncForPC(pc).Name()
+	tmp := strings.Split(funcName, "/")
+	funcName = tmp[len(tmp)-1]
 	str := fmt.Sprintf("[%v] %v", funcName, msg)
 	if len(args) > 0 {
 		str += fmt.Sprintf(":")

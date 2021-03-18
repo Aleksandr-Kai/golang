@@ -114,6 +114,31 @@ func DBRemoveUser(name string) {
 	fmt.Println("[SQL] DBUser removed: ", name)
 }
 
+func DBCreate() {
+	defer func() {
+		if err := recover(); err != nil {
+			Log("Panic occurred", err)
+		}
+	}()
+	dsn := "root@tcp(" + DataBaseHost + ")/?"
+	dsn += "&charset=utf8"
+	dsn += "&interpolateParams=true"
+	var err error
+	db, err = sql.Open("mysql", dsn)
+	if err != nil {
+		Log("SQL Open DataBase", err)
+		return
+	}
+	db.SetConnMaxIdleTime(10)
+	request := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS " + DataBaseName + " CHARACTER SET utf8 COLLATE utf8_general_ci;")
+	_, err = db.Query(request)
+	if err != nil {
+		NamedMessage("SQL", "Create database:", err)
+	} else {
+		NamedMessage("SQL", "Create database: Ok")
+	}
+}
+
 func DBOpen() error {
 	defer func() {
 		if err := recover(); err != nil {
@@ -144,18 +169,18 @@ func DBInit() {
 			Log("Panic occurred", err)
 		}
 	}()
-
-	request := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS " + DataBaseName + ";")
-	_, err := db.Query(request)
-	if err != nil {
-		NamedMessage("SQL", "Create database:", err)
-	} else {
-		NamedMessage("SQL", "Create database: Ok")
-	}
-
-	request = fmt.Sprintf("create table if not exists users(login char(15) not null, public_name char(15), " +
+	/*
+		request := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS " + DataBaseName + ";")
+		_, err := db.Query(request)
+		if err != nil {
+			NamedMessage("SQL", "Create database:", err)
+		} else {
+			NamedMessage("SQL", "Create database: Ok")
+		}
+	*/
+	request := fmt.Sprintf("create table if not exists users(login char(15) not null, public_name char(15), " +
 		"password char(25), accesslvl int not null, active bool not null, primary key(login, public_name));")
-	_, err = db.Query(request)
+	_, err := db.Query(request)
 	if err != nil {
 		NamedMessage("SQL", "Create table 'users':", err)
 	} else {
