@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+
 // Struct for invalid URLs
 type BadUrlMsg struct {
 	Row     int
