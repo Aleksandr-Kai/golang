@@ -2,8 +2,8 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
+	"github.com/mailru/easyjson/jlexer"
 	"io"
 	"os"
 	"strings"
@@ -13,6 +13,70 @@ type userStruct struct {
 	Browsers []string `json:"browsers"`
 	Email    string   `json:"email"`
 	Name     string   `json:"name"`
+}
+
+func easyjsonC76e1e44DecodeGithubComGolangHw3BenchCodegen(in *jlexer.Lexer, out *userStruct) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "browsers":
+			if in.IsNull() {
+				in.Skip()
+				out.Browsers = nil
+			} else {
+				in.Delim('[')
+				if out.Browsers == nil {
+					if !in.IsDelim(']') {
+						out.Browsers = make([]string, 0, 4)
+					} else {
+						out.Browsers = []string{}
+					}
+				} else {
+					out.Browsers = (out.Browsers)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v1 string
+					v1 = string(in.String())
+					out.Browsers = append(out.Browsers, v1)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		case "email":
+			out.Email = string(in.String())
+		case "name":
+			out.Name = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *userStruct) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonC76e1e44DecodeGithubComGolangHw3BenchCodegen(&r, v)
+	return r.Error()
 }
 
 // вам надо написать более быструю оптимальную этой функции
@@ -34,7 +98,7 @@ func FastSearch(out io.Writer) {
 	fmt.Fprintln(out, "found users:")
 	for scaner.Scan() {
 		i++
-		err := json.Unmarshal(scaner.Bytes(), &user)
+		err = user.UnmarshalJSON(scaner.Bytes())
 		if err != nil {
 			panic(err)
 		}
@@ -61,6 +125,5 @@ func FastSearch(out io.Writer) {
 		fmt.Fprintln(out, fmt.Sprintf("[%d] %s <%s>", i, user.Name, email))
 	}
 
-	//fmt.Fprintln(out, "found users:\n"+foundUsers)
 	fmt.Fprintln(out, "\nTotal unique browsers", len(seenBrowsers))
 }
