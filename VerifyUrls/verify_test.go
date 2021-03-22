@@ -133,12 +133,12 @@ const (
 `
 )
 
-func TestScan(t *testing.T) {
+func TestFindBadURLs(t *testing.T) {
 	fmt.Println("****************************************************************************")
 	fmt.Println("Scan")
 
 	fmt.Println("Test valid URLs")
-	res := Scan(validURLs)
+	_, res := findBadURLs(validURLs)
 	if res != nil {
 		for _, r := range res {
 			fmt.Printf("[%v:%v] %v\n", r.Row, r.Col, r.Message)
@@ -149,7 +149,7 @@ func TestScan(t *testing.T) {
 	}
 
 	fmt.Println("Test bad URLs")
-	res = Scan(invalidURLs)
+	_, res = findBadURLs(invalidURLs)
 	l := len(strings.Split(invalidURLs, "\n")) - 2
 	if len(res) != l {
 		for _, r := range res {
@@ -161,18 +161,8 @@ func TestScan(t *testing.T) {
 	}
 }
 
-func BenchmarkScan(b *testing.B) {
+func BenchmarkFindBadURLs(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		Scan(invalidURLs)
-	}
-}
-func BenchmarkScan1(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		Scan1(invalidURLs)
-	}
-}
-func BenchmarkScan2(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		Scan2(invalidURLs)
+		findBadURLs(invalidURLs)
 	}
 }
