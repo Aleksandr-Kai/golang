@@ -9,7 +9,6 @@ import (
 	"strings"
 )
 
-
 // Struct for invalid URLs
 type BadUrlMsg struct {
 	Row     int
@@ -20,8 +19,17 @@ type BadUrlMsg struct {
 // Accepts a string with html code as input and returns a slice of structures with invalid URLs
 func findBadURLs(doc string) (err error, result []BadUrlMsg) {
 	defer func() {
-		if e := recover(); e != nil {
-			err = e.(error)
+		if r := recover(); r != nil {
+			// find out exactly what the error was and set err
+			switch x := r.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+			default:
+				err = errors.New("Unknown panic")
+			}
+			result = nil
 		}
 	}()
 
@@ -65,8 +73,17 @@ func findBadURLs(doc string) (err error, result []BadUrlMsg) {
 // Returns slice of struct with position and description of bad URL
 func CheckPage(data []byte, header http.Header) (charsetErr error, badURLs []BadUrlMsg) {
 	defer func() {
-		if err := recover(); err != nil {
-			charsetErr = err.(error)
+		if r := recover(); r != nil {
+			// find out exactly what the error was and set err
+			switch x := r.(type) {
+			case string:
+				charsetErr = errors.New(x)
+			case error:
+				charsetErr = x
+			default:
+				charsetErr = errors.New("Unknown panic")
+			}
+			badURLs = nil
 		}
 	}()
 	// Verify charset
